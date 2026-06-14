@@ -1,6 +1,14 @@
 /* ── Reset & Base ──────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Custom scrollbar — forces a layout scrollbar so backdrop-filter fixed elements
+   don't overlap the scrollbar track via Chrome's compositing layer order. */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: oklch(0.28 0.05 280); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.38 0.07 280); }
+html { scrollbar-width: thin; scrollbar-color: oklch(0.28 0.05 280) var(--bg); }
+
 :root {
   --bg:      #07070A;
   --surface: rgba(255, 255, 255, 0.04);
