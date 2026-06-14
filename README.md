@@ -16,10 +16,6 @@ new SeedstoneRenderer('alice', {
 
 **Script tag** — include `dist/seedstone.standalone.js`, then use `window.Seedstone.SeedstoneRenderer`.
 
-## API
-
-#### `new SeedstoneRenderer(seed, options)`
-
 
 ## Cuts
 

@@ -93,6 +93,7 @@ async function copyUsage() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .card-label {
