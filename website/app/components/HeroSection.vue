@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { SeedstoneConfig } from 'seedstone'
 
-const inputValue      = ref('')
+const route  = useRoute()
+const router = useRouter()
+
+const inputValue      = ref(typeof route.query.seed === 'string' ? route.query.seed : '')
 const gemConfig       = ref<SeedstoneConfig | null>(null)
 const inputFocused    = ref(false)
 const caseInsensitive = ref(true)
@@ -12,6 +15,10 @@ const QUICK_PICKS = ['@satoshi', '0x71C7…976F', 'Orion-7', 'Stripe Inc', 'DOC-
 const activeSeed = computed(() => {
   const raw = inputValue.value.trim() || 'doadkjwfo'
   return caseInsensitive.value ? raw.toLowerCase() : raw
+})
+
+watch(inputValue, (val) => {
+  router.replace({ query: val.trim() ? { seed: val.trim() } : {} })
 })
 
 function onInput() {}
