@@ -1,6 +1,6 @@
 {
   "name": "seedstone",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Render a 3D rotating gem from any string",
   "main": "dist/seedstone.umd.js",
   "module": "dist/seedstone.esm.js",
