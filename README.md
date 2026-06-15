@@ -6,11 +6,11 @@ Every trait — colour, cut, refraction, iridescence, imperfections — is deriv
 
 ## Quick start
 
-```js
+```ts
 import { SeedstoneRenderer } from 'seedstone';
 
 new SeedstoneRenderer('alice', {
-  container: document.getElementById('gem'),
+  container: document.getElementById('gem')!,
 });
 ```
 
@@ -18,21 +18,24 @@ new SeedstoneRenderer('alice', {
 
 ## Overrides
 
-Pass a `config` tree to pin or re-randomise any trait. A plain number/string pins a
-value for every seed; `seeded()` flips a value to seed-generated instead.
+Pass a `config` tree to pin or re-randomise any trait. `SeedstoneConfigOverrides` is a
+deep-partial of the trait tree: a plain number/string pins a value for every seed, while
+`seeded()` flips a value to seed-generated instead.
 
-```js
-import { SeedstoneRenderer, seeded } from 'seedstone';
+```ts
+import { SeedstoneRenderer, seeded, type SeedstoneConfigOverrides } from 'seedstone';
+
+const config: SeedstoneConfigOverrides = {
+  gem: {
+    cut: 'spinel',                  // pin every gem to the spinel cut
+    bodyLightness: seeded(),        // make the body lightness vary by seed
+    distortion: { perfection: 1 },  // pin to fully flawless
+  },
+};
 
 new SeedstoneRenderer('alice', {
-  container: document.getElementById('gem'),
-  config: {
-    gem: {
-      cut: 'spinel',                  // pin every gem to the spinel cut
-      bodyLightness: seeded(),        // make the body lightness vary by seed
-      distortion: { perfection: 1 },  // pin to fully flawless
-    },
-  },
+  container: document.getElementById('gem')!,
+  config,
 });
 ```
 
@@ -42,17 +45,33 @@ All tunable traits live in [`src/config.ts`](src/config.ts).
 
 `update(seed)` swaps to a new seed and `setConfig(overrides)` re-applies overrides — both
 reconcile the existing instance in place, so they're cheap enough to call on every keystroke.
+Read back the fully-resolved values for the current seed from `gem.config` (a `SeedstoneConfig`).
 
-```js
+```ts
+import { SeedstoneRenderer, type SeedstoneConfig } from 'seedstone';
+
 const gem = new SeedstoneRenderer('alice', {
-  container: document.getElementById('gem'),
+  container: document.getElementById('gem')!,
 });
 
 input.addEventListener('input', () => gem.update(input.value));  // new seed, same instance
 
 gem.setConfig({ gem: { cut: 'garnet', hue: 200 } });  // pin traits live
 gem.setConfig({});                                     // clear overrides
+
+const resolved: SeedstoneConfig = gem.config;  // every trait, resolved for this seed
+console.log(resolved.gem.hue, resolved.gem.speed);
 ```
+
+## API stability
+
+The **core API** — `SeedstoneRenderer`, `seeded()`, and the `SeedstoneConfig` /
+`SeedstoneConfigOverrides` types — follows semver and stays stable across a major version.
+
+The **advanced exports** for schema introspection (`configSchema`, `mergeSchema`,
+`resolveConfig`, `isScalarParam`, `isChoiceParam`, and the `ScalarParam` / `ChoiceParam` /
+`SeedstoneSchema` types) exist for building a UI against the raw schema. They may change in any
+minor release — only depend on them if you pin the version.
 
 ## Development
 
