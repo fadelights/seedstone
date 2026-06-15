@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { SeedstoneConfig } from 'seedstone'
 
-const inputValue   = ref('')
-const activeSeed   = ref('SEE')
-const gemConfig    = ref<SeedstoneConfig | null>(null)
-const inputFocused = ref(false)
+const inputValue      = ref('')
+const gemConfig       = ref<SeedstoneConfig | null>(null)
+const inputFocused    = ref(false)
+const caseInsensitive = ref(true)
 
 const QUICK_PICKS = ['@satoshi', '0x71C7…976F', 'Orion-7', 'Stripe Inc', 'DOC-99812']
 
-function onInput() { activeSeed.value = inputValue.value.trim() || 'seedstone' }
-function onQuickPick(val: string) { inputValue.value = val; activeSeed.value = val }
+const activeSeed = computed(() => {
+  const raw = inputValue.value.trim() || 'doadkjwfo'
+  return caseInsensitive.value ? raw.toLowerCase() : raw
+})
+
+function onInput() {}
+function onQuickPick(val: string) { inputValue.value = val }
 
 defineExpose({
   focusInput() {
@@ -58,6 +63,13 @@ defineExpose({
                 @focus="inputFocused = true"
                 @blur="inputFocused = false"
               />
+              <button
+                class="case-toggle"
+                :class="{ active: caseInsensitive }"
+                :title="caseInsensitive ? 'Case-insensitive (click to make case-sensitive)' : 'Case-sensitive (click to make case-insensitive)'"
+                @click="caseInsensitive = !caseInsensitive"
+                @mousedown.prevent
+              >Aa</button>
             </div>
 
             <div class="examples">
@@ -173,6 +185,35 @@ defineExpose({
   padding: 4px 0;
 }
 .field input::placeholder { color: #67647a; }
+
+.case-toggle {
+  flex-shrink: 0;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: #67647a;
+  cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+  user-select: none;
+}
+.case-toggle.active {
+  color: oklch(0.75 0.14 290);
+  border-color: oklch(0.7 0.15 290 / .45);
+  background: oklch(0.7 0.15 290 / .08);
+}
+.case-toggle:hover {
+  border-color: var(--line-2);
+  color: var(--text-2);
+}
+.case-toggle.active:hover {
+  color: oklch(0.82 0.14 290);
+  border-color: oklch(0.7 0.15 290 / .65);
+}
 
 .examples {
   display: flex;
