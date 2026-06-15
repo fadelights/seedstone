@@ -250,11 +250,14 @@ export class SeedstoneRenderer {
   destroy(): void {
     this.destroyed = true;
     this.pause();
-    // Detach the canvas before losing the context: a force-lost WebGL canvas
-    // paints white, so removing it first avoids a white flash on teardown.
     this.renderer.domElement.remove();
     this._disposeScene();
-    this.renderer.forceContextLoss();
     this.renderer.dispose();
+    // Chrome paints a brief white frame when a WebGL context is force-lost.
+    // Defer the loss to the next frame — by then the detached canvas's
+    // compositor layer is gone, so that white frame is never visible. (The
+    // context is freed either way; this just controls *when*.)
+    const renderer = this.renderer;
+    requestAnimationFrame(() => renderer.forceContextLoss());
   }
 }

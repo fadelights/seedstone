@@ -12,24 +12,33 @@ const USE_CASES = [
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ucGems: any[] = []
+let io: IntersectionObserver | null = null
 
 onMounted(() => {
-  setTimeout(async () => {
-    const { SeedstoneRenderer } = await import('seedstone')
-    document.querySelectorAll<HTMLDivElement>('[data-uc-seed]').forEach((el, i) => {
-      setTimeout(() => {
-        if (!el.isConnected) return
-        const s = el.clientWidth || 104
-        const gem = new SeedstoneRenderer(el.dataset.ucSeed!, {
-          container: el, width: s, height: s, background: null, targetFPS: 24,
-        })
-        ucGems.push(gem)
-      }, i * 120)
-    })
-  }, 300)
+  // Build each thumbnail's gem only as it nears the viewport. These sit below
+  // the fold, so this keeps their (synchronous) construction off the critical
+  // first second, where it would otherwise starve the hero gem's animation.
+  io = new IntersectionObserver(
+    (entries) => entries.forEach(async (entry) => {
+      if (!entry.isIntersecting) return
+      const el = entry.target as HTMLDivElement
+      io!.unobserve(el)   // build once
+      const { SeedstoneRenderer } = await import('seedstone')
+      if (!el.isConnected) return
+      const s = el.clientWidth || 104
+      ucGems.push(new SeedstoneRenderer(el.dataset.ucSeed!, {
+        container: el, width: s, height: s, background: null, targetFPS: 24,
+      }))
+    }),
+    { rootMargin: '200px' },   // start building just before they scroll in
+  )
+  document.querySelectorAll<HTMLDivElement>('[data-uc-seed]').forEach((el) => io!.observe(el))
 })
 
-onBeforeUnmount(() => ucGems.forEach((g) => g.destroy()))
+onBeforeUnmount(() => {
+  io?.disconnect()
+  ucGems.forEach((g) => g.destroy())
+})
 </script>
 
 <template>
