@@ -6,6 +6,6 @@
   "rules": {
     "no-control-regex": "warn",
     "no-unused-expressions": "warn",
-    "no-unused-vars": "warn",
+    "no-unused-vars": "warn"
   }
 }
