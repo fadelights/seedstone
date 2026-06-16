@@ -14,10 +14,7 @@
   "postCreateCommand": "npm install && npm run build && npm install --prefix website",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "Vue.volar",
-        "oxc.oxc-vscode"
-      ],
+      "extensions": ["Vue.volar", "oxc.oxc-vscode"],
       "settings": {}
     }
   },

@@ -37,7 +37,8 @@ onMounted(async () => {
       entries.forEach((entry) => {
         const gem = gems.get((entry.target as HTMLDivElement).dataset.gemCut!);
         if (!gem) return;
-        entry.isIntersecting ? gem.play() : gem.pause();
+        if (entry.isIntersecting) gem.play();
+        else gem.pause();
       });
     },
     { threshold: 0.1 },

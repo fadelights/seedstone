@@ -17,7 +17,7 @@ function geometryGlob() {
       if (!id.endsWith(path.join("src", "geometries", "index.ts"))) return null;
 
       const globCall =
-        /import\.meta\.glob(?:<GemCutModule>)?\('\.\/\*\.ts',\s*\{\s*eager:\s*true,\s*import:\s*'default',\s*\}\)/m;
+        /import\.meta\.glob(?:<[^>]*>)?\(['"]\.\/\*\.ts['"],\s*\{\s*eager:\s*true,\s*import:\s*['"]default['"],\s*\}\)/m;
       if (!globCall.test(code)) return null;
 
       const dir = path.dirname(id);

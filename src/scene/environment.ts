@@ -120,7 +120,7 @@ export class Environment {
 
   /** Dispose and detach every mesh currently in the env scene. */
   private _clearScene(): void {
-    for (const obj of [...this.envScene.children]) {
+    for (const obj of this.envScene.children) {
       const mesh = obj as THREE.Mesh;
       mesh.geometry?.dispose();
       (mesh.material as THREE.Material | undefined)?.dispose();
