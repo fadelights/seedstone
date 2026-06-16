@@ -1,50 +1,79 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from "vue";
 
-const copiedInstall = ref(false)
-const copiedUsage   = ref(false)
-const usageHtml     = ref<string | null>(null)
+const copiedInstall = ref(false);
+const copiedUsage = ref(false);
+const usageHtml = ref<string | null>(null);
 
-const installCmd = 'npm install seedstone'
+const installCmd = "npm install seedstone";
 
 const usageCode = `import { SeedstoneRenderer } from 'seedstone';
 
 new SeedstoneRenderer('alice', {
   container: document.getElementById('gem'),
-});`
+});`;
 
 onMounted(async () => {
-  const { codeToHtml } = await import('shiki')
-  usageHtml.value = await codeToHtml(usageCode, { lang: 'javascript', theme: 'one-dark-pro' })
-})
+  const { codeToHtml } = await import("shiki");
+  usageHtml.value = await codeToHtml(usageCode, { lang: "javascript", theme: "one-dark-pro" });
+});
 
 async function copyInstall() {
-  await navigator.clipboard.writeText(installCmd)
-  copiedInstall.value = true
-  setTimeout(() => { copiedInstall.value = false }, 1500)
+  await navigator.clipboard.writeText(installCmd);
+  copiedInstall.value = true;
+  setTimeout(() => {
+    copiedInstall.value = false;
+  }, 1500);
 }
 
 async function copyUsage() {
-  await navigator.clipboard.writeText(usageCode)
-  copiedUsage.value = true
-  setTimeout(() => { copiedUsage.value = false }, 1500)
+  await navigator.clipboard.writeText(usageCode);
+  copiedUsage.value = true;
+  setTimeout(() => {
+    copiedUsage.value = false;
+  }, 1500);
 }
 </script>
 
 <template>
   <div class="code-section">
-
     <!-- ── Install card ─────────────────────────────────── -->
     <div class="card">
       <span class="card-label">install</span>
       <div class="code-wrap">
         <pre class="install-block"><span class="prompt">$</span> {{ installCmd }}</pre>
-        <button class="copy-btn" :class="{ done: copiedInstall }" :aria-label="copiedInstall ? 'Copied' : 'Copy'" @click="copyInstall">
-          <svg v-if="!copiedInstall" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        <button
+          class="copy-btn"
+          :class="{ done: copiedInstall }"
+          :aria-label="copiedInstall ? 'Copied' : 'Copy'"
+          @click="copyInstall"
+        >
+          <svg
+            v-if="!copiedInstall"
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
-          <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
+          <svg
+            v-else
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </button>
       </div>
@@ -58,17 +87,42 @@ async function copyUsage() {
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-if="usageHtml" class="shiki-wrap" v-html="usageHtml" />
         <pre v-else class="install-block plain">{{ usageCode }}</pre>
-        <button class="copy-btn" :class="{ done: copiedUsage }" :aria-label="copiedUsage ? 'Copied' : 'Copy'" @click="copyUsage">
-          <svg v-if="!copiedUsage" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        <button
+          class="copy-btn"
+          :class="{ done: copiedUsage }"
+          :aria-label="copiedUsage ? 'Copied' : 'Copy'"
+          @click="copyUsage"
+        >
+          <svg
+            v-if="!copiedUsage"
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
-          <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
+          <svg
+            v-else
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </button>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -81,7 +135,9 @@ async function copyUsage() {
   gap: 14px;
 }
 @media (max-width: 640px) {
-  .code-section { grid-template-columns: 1fr; }
+  .code-section {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Card ──────────────────────────────────────────────── */
@@ -110,12 +166,12 @@ async function copyUsage() {
 }
 
 .install-block {
-  font-family: 'Consolas', 'SF Mono', monospace;
+  font-family: "Consolas", "SF Mono", monospace;
   font-size: 0.8rem;
   line-height: 1.6;
-  color: rgba(255,255,255,0.82);
-  background: rgba(0,0,0,0.28);
-  border: 1px solid rgba(255,255,255,0.07);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   padding: 11px 42px 11px 15px;
   white-space: pre;
@@ -124,7 +180,7 @@ async function copyUsage() {
 }
 
 .install-block.plain {
-  color: rgba(255,255,255,0.55);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .prompt {
@@ -134,11 +190,11 @@ async function copyUsage() {
 }
 
 .shiki-wrap :deep(pre.shiki) {
-  font-family: 'Consolas', 'SF Mono', monospace;
+  font-family: "Consolas", "SF Mono", monospace;
   font-size: 0.8rem;
   line-height: 1.6;
-  background: rgba(0,0,0,0.28) !important;
-  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(0, 0, 0, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   padding: 11px 42px 11px 15px;
   overflow-x: auto;
@@ -156,20 +212,23 @@ async function copyUsage() {
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 .copy-btn:hover {
-  background: rgba(255,255,255,0.11);
-  color: rgba(255,255,255,0.75);
-  border-color: rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.11);
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 .copy-btn.done {
   color: #86efac;
-  border-color: rgba(134,239,172,0.3);
-  background: rgba(134,239,172,0.07);
+  border-color: rgba(134, 239, 172, 0.3);
+  background: rgba(134, 239, 172, 0.07);
 }
 </style>

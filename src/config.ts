@@ -22,165 +22,197 @@
  *   rates                              radians or cycles per second
  */
 
-import { sampleUnit } from './random';
-import { listCuts } from './geometries/index';
+import { sampleUnit } from "./random";
+import { listCuts } from "./geometries/index";
 
 type Vec2 = [number, number];
 type Vec3 = [number, number, number];
 /** Which accent hue tints an orbit light, if any. */
-type Tint = 'accent1' | 'accent2' | null;
+type Tint = "accent1" | "accent2" | null;
 
 // ── Parameter constructors ────────────────────────────────────────────────────
 
 /** A scalar declared with its mode and range. The schema is a tree of these. */
 export interface ScalarParam {
-  readonly mode:  'config' | 'dna';
-  readonly value: number;   // fixed value ('config') or range midpoint ('dna')
-  readonly min:   number;
-  readonly max:   number;
-  readonly step:  number;
+  readonly mode: "config" | "dna";
+  readonly value: number; // fixed value ('config') or range midpoint ('dna')
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
 }
 
 /** Fixed value, tunable in the config lab. */
 function c(value: number, min: number, max: number, step: number): ScalarParam {
-  return { mode: 'config', value, min, max, step };
+  return { mode: "config", value, min, max, step };
 }
 
 /** Seed-generated: sampled uniformly from [min, max] for each gem. */
 function d(min: number, max: number): ScalarParam {
-  return { mode: 'dna', value: (min + max) / 2, min, max, step: (max - min) / 100 };
+  return { mode: "dna", value: (min + max) / 2, min, max, step: (max - min) / 100 };
 }
 
 /** A categorical choice. The options list is read lazily, so it can come from
  *  a registry that is still populating when the schema is declared. */
 export interface ChoiceParam {
-  readonly mode:    'config' | 'dna';
-  readonly value:   string | null;   // the pinned choice, or null when seed-picked
+  readonly mode: "config" | "dna";
+  readonly value: string | null; // the pinned choice, or null when seed-picked
   readonly options: () => string[];
 }
 
 /** Seed-picked choice from a list — pass `pinned` to fix it instead. */
 function pick(options: () => string[], pinned?: string): ChoiceParam {
-  return { mode: pinned === undefined ? 'dna' : 'config', value: pinned ?? null, options };
+  return { mode: pinned === undefined ? "dna" : "config", value: pinned ?? null, options };
 }
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 export const config = {
   renderer: {
-    toneMappingExposure:         d(0.5, 1),
+    toneMappingExposure: d(0.5, 1),
     // Half-res glass pass — a quarter of the pixels, no visible quality loss.
     transmissionResolutionScale: 0.5,
-    defaultSize:                 400,   // fallback canvas size when container is unsized
-    maxPixelRatio:               2,     // cap; above 2 burns GPU for invisible gains
-    maxFrameDelta:               0.1,   // seconds; prevents jump after hidden tab
+    defaultSize: 400, // fallback canvas size when container is unsized
+    maxPixelRatio: 2, // cap; above 2 burns GPU for invisible gains
+    maxFrameDelta: 0.1, // seconds; prevents jump after hidden tab
   },
 
   camera: {
-    fov:      c(35, 10, 80, 1),
-    near:     0.1,
-    far:      100,
+    fov: c(35, 10, 80, 1),
+    near: 0.1,
+    far: 100,
     position: [0, 0.2, 2.4] as Vec3,
-    lookAt:   [0, -0.05, 0] as Vec3,
+    lookAt: [0, -0.05, 0] as Vec3,
   },
 
   gem: {
-    cut:        pick(listCuts), // geometry, from the registry; pin with pick(listCuts, 'garnet')
-    hue:        d(0, 360),      // body colour; also tints the env fills and rim light
+    cut: pick(listCuts), // geometry, from the registry; pin with pick(listCuts, 'garnet')
+    hue: d(0, 360), // body colour; also tints the env fills and rim light
     saturation: d(0.55, 1),
-    speed:      d(0.6, 1.4),    // rotation multiplier; also drives the orbit lights
-    tilt:       d(-0.2, 0.2),   // Z-axis tilt, radians
+    speed: d(0.6, 1.4), // rotation multiplier; also drives the orbit lights
+    tilt: d(-0.2, 0.2), // Z-axis tilt, radians
 
     material: {
-      ior:                       d(1.8, 2.8),            // index of refraction
-      iridescence:               d(0.3, 1),              // surface "fire" intensity
-      transmission:              c(0.8,  0,   1,    0.01),  // 1 = fully glass-like
-      thickness:                 c(0.5,  0,   3,    0.05),  // refraction volume depth
-      iridescenceIOR:            c(1.67, 1,   2.33, 0.01),
-      iridescenceThicknessRange: [100, 800] as Vec2,        // nm; wider = more rainbow
-      attenuationDistance:       c(2,    0.1, 8,    0.1 ),  // depth before tinting
-      envMapIntensity:           c(3.1,  0,   12,   0.1 ),  // environment reflection strength
+      ior: d(1.8, 2.8), // index of refraction
+      iridescence: d(0.3, 1), // surface "fire" intensity
+      transmission: c(0.8, 0, 1, 0.01), // 1 = fully glass-like
+      thickness: c(0.5, 0, 3, 0.05), // refraction volume depth
+      iridescenceIOR: c(1.67, 1, 2.33, 0.01),
+      iridescenceThicknessRange: [100, 800] as Vec2, // nm; wider = more rainbow
+      attenuationDistance: c(2, 0.1, 8, 0.1), // depth before tinting
+      envMapIntensity: c(3.1, 0, 12, 0.1), // environment reflection strength
     },
 
     // Geometry imperfections, applied once when the mesh is built.
     distortion: {
-      perfection: d(0, 1),   // 0 = heavily distorted, 1 = flawless
-      scaleX:     d(0, 1),   // per-axis stretch seeds
-      scaleY:     d(0, 1),
-      scaleZ:     d(0, 1),
-      noiseSeed:  d(0, 1),   // vertex-noise direction seed
+      perfection: d(0, 1), // 0 = heavily distorted, 1 = flawless
+      scaleX: d(0, 1), // per-axis stretch seeds
+      scaleY: d(0, 1),
+      scaleZ: d(0, 1),
+      noiseSeed: d(0, 1), // vertex-noise direction seed
     },
 
-    bodyLightness:        c(0.45, 0, 1,   0.01 ),
-    bodySaturationScale:  c(0.78, 0, 1,   0.01 ),  // tames fully-saturated hues
-    attenuationLightness: c(0.29, 0, 1,   0.01 ),  // depth-tint colour (darker = richer core)
-    wireframeOpacity:     c(0.3,  0, 0.3, 0.005),  // facet-edge overlay; 0 disables it
-    spinRate:             c(0.25, 0, 2,   0.05 ),  // base Y spin, multiplied by gem.speed
-    wobbleRate:           c(1,    0, 2,   0.05 ),
-    wobbleAmount:         c(0.2,  0, 0.5, 0.01 ),
+    bodyLightness: c(0.45, 0, 1, 0.01),
+    bodySaturationScale: c(0.78, 0, 1, 0.01), // tames fully-saturated hues
+    attenuationLightness: c(0.29, 0, 1, 0.01), // depth-tint colour (darker = richer core)
+    wireframeOpacity: c(0.3, 0, 0.3, 0.005), // facet-edge overlay; 0 disables it
+    spinRate: c(0.25, 0, 2, 0.05), // base Y spin, multiplied by gem.speed
+    wobbleRate: c(1, 0, 2, 0.05),
+    wobbleAmount: c(0.2, 0, 0.5, 0.01),
   },
 
   // The PMREM-baked studio dome the gem reflects and refracts.
   // Tinted by lights.accent1Hue/accent2Hue (dome, spots) and gem.hue (fills).
   environment: {
-    domeRadius:         6,
-    domeSaturation:     c(0.1,   0,    1,   0.01  ),
-    domeLightness:      c(0.314, 0,    0.5, 0.005 ),  // near-black with a hint of accent hue
+    domeRadius: 6,
+    domeSaturation: c(0.1, 0, 1, 0.01),
+    domeLightness: c(0.314, 0, 0.5, 0.005), // near-black with a hint of accent hue
     // Bright spots — the "studio lights" glinting off facets (HDR values > 1).
-    spotCount:          c(16,   0,    48,  1     ),
-    spotOrbitRadius:    5.5,
-    spotSize:           c(0.07, 0.01, 0.3, 0.005 ),
-    whiteSpotIntensity: c(2.5,  0,    15,  0.1   ),
-    tintSpotIntensity:  c(1.8,  0,    10,  0.1   ),
-    tintSpotLightness:  c(0.9,  0,    1,   0.01  ),
+    spotCount: c(16, 0, 48, 1),
+    spotOrbitRadius: 5.5,
+    spotSize: c(0.07, 0.01, 0.3, 0.005),
+    whiteSpotIntensity: c(2.5, 0, 15, 0.1),
+    tintSpotIntensity: c(1.8, 0, 10, 0.1),
+    tintSpotLightness: c(0.9, 0, 1, 0.01),
     // Dim fill spheres tinting the lower hemisphere, hue-stepped from gem.hue.
-    fillCount:          c(4,    0,    8,   1     ),
-    fillRadius:         4,
-    fillSize:           0.8,
-    fillSaturation:     c(0.6,  0,    1,   0.01  ),
-    fillLightness:      c(0.18, 0,    0.6, 0.01  ),
-    fillHueStep:        90,
-    fillY:              -1,
-    blurRadius:         c(0,    0,    1,   0.02  ),  // PMREM blur sigma; 0 = sharp
+    fillCount: c(4, 0, 8, 1),
+    fillRadius: 4,
+    fillSize: 0.8,
+    fillSaturation: c(0.6, 0, 1, 0.01),
+    fillLightness: c(0.18, 0, 0.6, 0.01),
+    fillHueStep: 90,
+    fillY: -1,
+    blurRadius: c(0, 0, 1, 0.02), // PMREM blur sigma; 0 = sharp
   },
 
   lights: {
-    accent1Hue:       d(0, 360),           // primary accent; tints lights + environment
-    accent2HueOffset: c(110, 0, 360, 5),   // second accent, degrees from the first
+    accent1Hue: d(0, 360), // primary accent; tints lights + environment
+    accent2HueOffset: c(110, 0, 360, 5), // second accent, degrees from the first
     ambientIntensity: c(0.2, 0, 0.5, 0.01),
-    pointLightRange:  c(6,    0, 12,  0.5 ),  // falloff distance of the orbit lights
+    pointLightRange: c(6, 0, 12, 0.5), // falloff distance of the orbit lights
     // Four lights orbiting the gem. tint: accent1/accent2 take the accent hues;
     // null keeps the static color. phaseDeg spaces them; speed × gem.speed.
     orbits: [
-      { color: 0xfff4e0, tint: null,              intensity: 180, radius: 1.6, speed:  0.55, phaseDeg:   0, y:  1.0 },
-      { color: 0xffffff, tint: 'accent1' as Tint, intensity: 140, radius: 1.8, speed: -0.42, phaseDeg: 120, y:  0.3 },
-      { color: 0xffffff, tint: 'accent2' as Tint, intensity: 120, radius: 1.5, speed:  0.80, phaseDeg: 240, y: -0.2 },
-      { color: 0xc8d8ff, tint: null,              intensity:  80, radius: 2.0, speed: -0.30, phaseDeg: 180, y:  1.4 },
+      {
+        color: 0xfff4e0,
+        tint: null,
+        intensity: 180,
+        radius: 1.6,
+        speed: 0.55,
+        phaseDeg: 0,
+        y: 1.0,
+      },
+      {
+        color: 0xffffff,
+        tint: "accent1" as Tint,
+        intensity: 140,
+        radius: 1.8,
+        speed: -0.42,
+        phaseDeg: 120,
+        y: 0.3,
+      },
+      {
+        color: 0xffffff,
+        tint: "accent2" as Tint,
+        intensity: 120,
+        radius: 1.5,
+        speed: 0.8,
+        phaseDeg: 240,
+        y: -0.2,
+      },
+      {
+        color: 0xc8d8ff,
+        tint: null,
+        intensity: 80,
+        radius: 2.0,
+        speed: -0.3,
+        phaseDeg: 180,
+        y: 1.4,
+      },
     ],
-    tintSaturation: c(1,    0, 1, 0.01),
-    tintLightness:  d(0.1, 0.35),
-    bobRate:        c(0.38, 0, 2, 0.02),  // vertical bobbing of orbit lights
-    bobAmount:      c(0.35, 0, 1, 0.02),
+    tintSaturation: c(1, 0, 1, 0.01),
+    tintLightness: d(0.1, 0.35),
+    bobRate: c(0.38, 0, 2, 0.02), // vertical bobbing of orbit lights
+    bobAmount: c(0.35, 0, 1, 0.02),
     rim: {
-      intensity:  c(1.8,  0, 6,   0.1 ),
-      hueOffset:  c(160,  0, 360, 5   ),  // degrees from gem.hue
-      saturation: c(0.8,  0, 1,   0.01),
-      lightness:  c(0.55, 0, 1,   0.01),
-      position:   [0.5, -1.5, -1.5] as Vec3,
+      intensity: c(1.8, 0, 6, 0.1),
+      hueOffset: c(160, 0, 360, 5), // degrees from gem.hue
+      saturation: c(0.8, 0, 1, 0.01),
+      lightness: c(0.55, 0, 1, 0.01),
+      position: [0.5, -1.5, -1.5] as Vec3,
     },
   },
 
   // The shell of tiny points floating around the gem.
   sparkles: {
-    scatterSeed: d(0, 1),   // placement seed — every gem gets its own sky
-    count:       c(120,   0,    500, 10   ),
-    size:        c(0.025, 0,    0.1, 0.001),
-    radiusMin:   c(0.9,   0.3,  2,   0.05 ),
-    radiusRange: c(1.4,   0,    3,   0.05 ),
-    driftRate:   c(-0.03, -0.3, 0.3, 0.01 ),  // slow counter-drift against gem spin
-    baseOpacity: c(0.45,  0,    1,   0.02 ),
-    pulseAmount: c(0.15,  0,    0.5, 0.01 ),
-    pulseRate:   c(0.5,   0,    3,   0.05 ),
+    scatterSeed: d(0, 1), // placement seed — every gem gets its own sky
+    count: c(120, 0, 500, 10),
+    size: c(0.025, 0, 0.1, 0.001),
+    radiusMin: c(0.9, 0.3, 2, 0.05),
+    radiusRange: c(1.4, 0, 3, 0.05),
+    driftRate: c(-0.03, -0.3, 0.3, 0.01), // slow counter-drift against gem spin
+    baseOpacity: c(0.45, 0, 1, 0.02),
+    pulseAmount: c(0.15, 0, 0.5, 0.01),
+    pulseRate: c(0.5, 0, 3, 0.05),
   },
 };
 
@@ -194,12 +226,15 @@ export type SeedstoneSchema = typeof config;
 
 // ── Type machinery ────────────────────────────────────────────────────────────
 
-type Resolved<T> =
-  T extends ScalarParam ? number
-  : T extends ChoiceParam ? string
-  : T extends readonly unknown[] ? T
-  : T extends object ? { [K in keyof T]: Resolved<T[K]> }
-  : T;
+type Resolved<T> = T extends ScalarParam
+  ? number
+  : T extends ChoiceParam
+    ? string
+    : T extends readonly unknown[]
+      ? T
+      : T extends object
+        ? { [K in keyof T]: Resolved<T[K]> }
+        : T;
 
 /**
  * The fully-resolved gem config — every knob unwrapped to its plain value.
@@ -210,11 +245,15 @@ type Resolved<T> =
 export type SeedstoneConfig = Resolved<SeedstoneSchema>;
 
 /** Marker returned by `seeded()` — flips a parameter to seed-generated. */
-export interface Seeded { readonly mode: 'dna'; }
+export interface Seeded {
+  readonly mode: "dna";
+}
 
 /** Make a parameter seed-generated, overriding the schema default.
  *  Use it in an overrides tree, e.g. `{ gem: { tilt: seeded() } }`. */
-export function seeded(): Seeded { return { mode: 'dna' }; }
+export function seeded(): Seeded {
+  return { mode: "dna" };
+}
 
 /** Override a scalar parameter.
  *  - plain number → pin it to that fixed value
@@ -226,12 +265,15 @@ export type ScalarOverride = number | Seeded;
  *  - `seeded()`   → make it seed-picked (even if the schema default was pinned) */
 export type ChoiceOverride = string | Seeded;
 
-type SchemaOverride<T> =
-  T extends ScalarParam ? ScalarOverride
-  : T extends ChoiceParam ? ChoiceOverride
-  : T extends readonly unknown[] ? T
-  : T extends object ? { [K in keyof T]?: SchemaOverride<T[K]> }
-  : T;
+type SchemaOverride<T> = T extends ScalarParam
+  ? ScalarOverride
+  : T extends ChoiceParam
+    ? ChoiceOverride
+    : T extends readonly unknown[]
+      ? T
+      : T extends object
+        ? { [K in keyof T]?: SchemaOverride<T[K]> }
+        : T;
 
 /**
  * What you pass to `new SeedstoneRenderer(seed, { config: … })` or `setConfig()`.
@@ -244,15 +286,15 @@ export type SeedstoneConfigOverrides = SchemaOverride<SeedstoneSchema>;
 // ── Schema resolution ─────────────────────────────────────────────────────────
 
 export function isScalarParam(v: unknown): v is ScalarParam {
-  return typeof v === 'object' && v !== null && 'mode' in v && 'min' in v;
+  return typeof v === "object" && v !== null && "mode" in v && "min" in v;
 }
 
 export function isChoiceParam(v: unknown): v is ChoiceParam {
-  return typeof v === 'object' && v !== null && 'mode' in v && 'options' in v;
+  return typeof v === "object" && v !== null && "mode" in v && "options" in v;
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
+  return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
 /**
@@ -268,16 +310,16 @@ export function mergeSchema(overrides: SeedstoneConfigOverrides = {}): Seedstone
       if (value === undefined) continue;
       const baseValue = (base as Record<string, unknown>)[key];
       if (isScalarParam(baseValue)) {
-        if (typeof value === 'number') {
-          merged[key] = { ...baseValue, mode: 'config', value };
-        } else if (isPlainObject(value) && value.mode === 'dna') {
-          merged[key] = { ...baseValue, mode: 'dna' };
+        if (typeof value === "number") {
+          merged[key] = { ...baseValue, mode: "config", value };
+        } else if (isPlainObject(value) && value.mode === "dna") {
+          merged[key] = { ...baseValue, mode: "dna" };
         }
       } else if (isChoiceParam(baseValue)) {
-        if (typeof value === 'string') {
-          merged[key] = { ...baseValue, mode: 'config', value };
-        } else if (isPlainObject(value) && value.mode === 'dna') {
-          merged[key] = { ...baseValue, mode: 'dna' };
+        if (typeof value === "string") {
+          merged[key] = { ...baseValue, mode: "config", value };
+        } else if (isPlainObject(value) && value.mode === "dna") {
+          merged[key] = { ...baseValue, mode: "dna" };
         }
       } else if (isPlainObject(baseValue) && isPlainObject(value)) {
         merged[key] = merge(baseValue, value);
@@ -300,13 +342,14 @@ export function mergeSchema(overrides: SeedstoneConfigOverrides = {}): Seedstone
 export function resolveConfig(schema: SeedstoneSchema, seed?: string): SeedstoneConfig {
   function resolve(node: unknown, path: string): unknown {
     if (isScalarParam(node)) {
-      return node.mode === 'dna' && seed !== undefined
+      return node.mode === "dna" && seed !== undefined
         ? node.min + sampleUnit(seed, path) * (node.max - node.min)
         : node.value;
     }
     if (isChoiceParam(node)) {
       const options = node.options();
-      if (node.mode === 'config' && node.value !== null && options.includes(node.value)) return node.value;
+      if (node.mode === "config" && node.value !== null && options.includes(node.value))
+        return node.value;
       return seed !== undefined
         ? options[Math.floor(sampleUnit(seed, path) * options.length)]
         : options[0];
@@ -319,7 +362,7 @@ export function resolveConfig(schema: SeedstoneSchema, seed?: string): Seedstone
     }
     return node;
   }
-  return resolve(schema, '') as SeedstoneConfig;
+  return resolve(schema, "") as SeedstoneConfig;
 }
 
 /** The schema's defaults as plain numbers (d() knobs read as their midpoint). */

@@ -1,36 +1,39 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
-  mergeSchema, resolveConfig,
-  SeedstoneSchema, SeedstoneConfig, SeedstoneConfigOverrides,
-} from './config';
-import { Environment } from './scene/environment';
-import { Gem } from './scene/gem';
-import { Lights } from './scene/lights';
-import { Sparkles } from './scene/sparkles';
+  mergeSchema,
+  resolveConfig,
+  SeedstoneSchema,
+  SeedstoneConfig,
+  SeedstoneConfigOverrides,
+} from "./config";
+import { Environment } from "./scene/environment";
+import { Gem } from "./scene/gem";
+import { Lights } from "./scene/lights";
+import { Sparkles } from "./scene/sparkles";
 
 // ── Public API types ──────────────────────────────────────────────────────────
 
 export interface SeedstoneOptions {
   /** Element the canvas is appended to. Required. */
-  container:    HTMLElement;
+  container: HTMLElement;
   /** Canvas size in px. Defaults to the container's client size. */
-  width?:       number;
-  height?:      number;
+  width?: number;
+  height?: number;
   /** Background colour, or null (default) for a transparent canvas. */
-  background?:  string | number | null;
+  background?: string | number | null;
   /** Start the render loop immediately. If false, a single still frame is rendered. Default: true. */
-  autoRotate?:  boolean;
+  autoRotate?: boolean;
   /** Canvas pixel ratio. Default: min(devicePixelRatio, 2). */
-  pixelRatio?:  number;
+  pixelRatio?: number;
   /** Cap the render loop frame rate. Useful for gallery thumbnails (e.g. 24). */
-  targetFPS?:   number;
+  targetFPS?: number;
   /** Pin any schema knob for this instance, e.g. `{ gem: { cut: 'garnet', hue: 200 } }`. */
-  config?:      SeedstoneConfigOverrides;
+  config?: SeedstoneConfigOverrides;
   /** Keep the drawing buffer readable for canvas.toDataURL(). Costs performance. Default: false. */
   preserveDrawingBuffer?: boolean;
   /** Called once the shaders are compiled and the first frame is painted —
    *  useful for hiding a loading state. The gem appears stutter-free. */
-  onReady?:     () => void;
+  onReady?: () => void;
 }
 
 // ── Renderer ──────────────────────────────────────────────────────────────────
@@ -43,22 +46,22 @@ export interface SeedstoneOptions {
  * PMREM env bake, or sparkle scatter whose inputs changed is redone.
  */
 export class SeedstoneRenderer {
-  private schema:      SeedstoneSchema;   // knob tree with instance overrides pinned
-  private renderer:    THREE.WebGLRenderer;
-  private scene:       THREE.Scene;
-  private camera:      THREE.PerspectiveCamera;
+  private schema: SeedstoneSchema; // knob tree with instance overrides pinned
+  private renderer: THREE.WebGLRenderer;
+  private scene: THREE.Scene;
+  private camera: THREE.PerspectiveCamera;
   private environment!: Environment;
-  private gem!:         Gem;
-  private lights!:      Lights;
-  private sparkles!:    Sparkles;
+  private gem!: Gem;
+  private lights!: Lights;
+  private sparkles!: Sparkles;
 
-  private minFrameMs:  number;       // minimum ms between renders (FPS cap)
-  private onReady?:    () => void;   // fired after the first stutter-free paint
-  private lastTick     = 0;          // rAF timestamp of the last rendered frame
-  private elapsed      = 0;          // accumulated animation time in seconds
-  private rebuildSeq   = 0;          // monotone counter — stale idle rebuilds bail out early
+  private minFrameMs: number; // minimum ms between renders (FPS cap)
+  private onReady?: () => void; // fired after the first stutter-free paint
+  private lastTick = 0; // rAF timestamp of the last rendered frame
+  private elapsed = 0; // accumulated animation time in seconds
+  private rebuildSeq = 0; // monotone counter — stale idle rebuilds bail out early
   private animFrameId: number | null = null;
-  private destroyed    = false;
+  private destroyed = false;
 
   /** The seed currently being rendered. Read-only. */
   seed: string;
@@ -67,39 +70,46 @@ export class SeedstoneRenderer {
 
   constructor(seed: string, options: SeedstoneOptions) {
     this.schema = mergeSchema(options.config);
-    this.seed   = seed;
+    this.seed = seed;
     this.config = resolveConfig(this.schema, seed);
 
     const container = options.container;
-    if (!container) throw new Error('[seedstone] options.container is required.');
+    if (!container) throw new Error("[seedstone] options.container is required.");
 
     const { renderer: rendererCfg } = this.config;
-    const width     = options.width  ?? (container.clientWidth  || rendererCfg.defaultSize);
-    const height    = options.height ?? (container.clientHeight || rendererCfg.defaultSize);
-    const bg        = options.background ?? null;
-    this.minFrameMs = options.targetFPS ? (1000 / options.targetFPS) : 0;
-    this.onReady    = options.onReady;
+    const width = options.width ?? (container.clientWidth || rendererCfg.defaultSize);
+    const height = options.height ?? (container.clientHeight || rendererCfg.defaultSize);
+    const bg = options.background ?? null;
+    this.minFrameMs = options.targetFPS ? 1000 / options.targetFPS : 0;
+    this.onReady = options.onReady;
 
     this.renderer = new THREE.WebGLRenderer({
-      antialias:             true,
-      alpha:                 bg === null,
-      powerPreference:       'high-performance',
+      antialias: true,
+      alpha: bg === null,
+      powerPreference: "high-performance",
       preserveDrawingBuffer: options.preserveDrawingBuffer ?? false,
     });
-    this.renderer.setPixelRatio(options.pixelRatio ?? Math.min(window.devicePixelRatio, rendererCfg.maxPixelRatio));
+    this.renderer.setPixelRatio(
+      options.pixelRatio ?? Math.min(window.devicePixelRatio, rendererCfg.maxPixelRatio),
+    );
     this.renderer.setSize(width, height);
-    this.renderer.toneMapping              = THREE.ACESFilmicToneMapping;
-    this.renderer.shadowMap.enabled        = false;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.shadowMap.enabled = false;
     // Skip synchronous shader-error readback — a known compile-time stall.
-    this.renderer.debug.checkShaderErrors  = false;
-    this.renderer.domElement.style.display = 'block';
+    this.renderer.debug.checkShaderErrors = false;
+    this.renderer.domElement.style.display = "block";
     container.appendChild(this.renderer.domElement);
 
     this.scene = new THREE.Scene();
     if (bg !== null) this.scene.background = new THREE.Color(bg);
 
     const cameraCfg = this.config.camera;
-    this.camera = new THREE.PerspectiveCamera(cameraCfg.fov, width / height, cameraCfg.near, cameraCfg.far);
+    this.camera = new THREE.PerspectiveCamera(
+      cameraCfg.fov,
+      width / height,
+      cameraCfg.near,
+      cameraCfg.far,
+    );
 
     this._applyRendererConfig();
     this._buildScene();
@@ -118,7 +128,7 @@ export class SeedstoneRenderer {
   private _start(autoRotate: boolean): void {
     const start = () => {
       if (this.destroyed) return;
-      this._renderFrame();        // first paint — shaders warm, no stall
+      this._renderFrame(); // first paint — shaders warm, no stall
       this.onReady?.();
       if (autoRotate) this._startLoop();
     };
@@ -130,11 +140,11 @@ export class SeedstoneRenderer {
   /** Renderer/camera knobs that apply outside the scene modules. */
   private _applyRendererConfig(): void {
     const { renderer: rendererCfg, camera: cameraCfg } = this.config;
-    this.renderer.toneMappingExposure         = rendererCfg.toneMappingExposure;
+    this.renderer.toneMappingExposure = rendererCfg.toneMappingExposure;
     this.renderer.transmissionResolutionScale = rendererCfg.transmissionResolutionScale;
-    this.camera.fov  = cameraCfg.fov;
+    this.camera.fov = cameraCfg.fov;
     this.camera.near = cameraCfg.near;
-    this.camera.far  = cameraCfg.far;
+    this.camera.far = cameraCfg.far;
     this.camera.position.set(...cameraCfg.position);
     this.camera.lookAt(...cameraCfg.lookAt);
     this.camera.updateProjectionMatrix();
@@ -143,8 +153,8 @@ export class SeedstoneRenderer {
   private _buildScene(): void {
     this.environment = new Environment(this.renderer, this.config);
     this.scene.environment = this.environment.render();
-    this.gem      = new Gem(this.scene, this.config);
-    this.lights   = new Lights(this.scene, this.config);
+    this.gem = new Gem(this.scene, this.config);
+    this.lights = new Lights(this.scene, this.config);
     this.sparkles = new Sparkles(this.scene, this.config);
   }
 
@@ -171,7 +181,7 @@ export class SeedstoneRenderer {
       this.gem.update(this.config);
       this.lights.update(this.config);
       this.sparkles.update(this.config);
-      if (this.animFrameId === null) this._renderFrame();   // paused → show the result now
+      if (this.animFrameId === null) this._renderFrame(); // paused → show the result now
     };
     setTimeout(apply, 0);
   }
@@ -194,8 +204,10 @@ export class SeedstoneRenderer {
       if (this.minFrameMs > 0 && now - this.lastTick < this.minFrameMs) return;
 
       // Clamp the time step so the animation doesn't jump after a hidden tab.
-      const dt = this.lastTick === 0 ? 0
-        : Math.min((now - this.lastTick) / 1000, this.config.renderer.maxFrameDelta);
+      const dt =
+        this.lastTick === 0
+          ? 0
+          : Math.min((now - this.lastTick) / 1000, this.config.renderer.maxFrameDelta);
       this.lastTick = now;
       this.elapsed += dt;
       this._renderFrame();
@@ -212,7 +224,7 @@ export class SeedstoneRenderer {
    */
   update(seed: string): void {
     if (this.destroyed) return;
-    this.seed   = seed;
+    this.seed = seed;
     this.config = resolveConfig(this.schema, seed);
     this._scheduleApply();
   }
@@ -239,7 +251,7 @@ export class SeedstoneRenderer {
     if (this.animFrameId !== null) {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
-      this.lastTick = 0;   // next play() resumes smoothly instead of jumping
+      this.lastTick = 0; // next play() resumes smoothly instead of jumping
     }
   }
 

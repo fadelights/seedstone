@@ -1,80 +1,82 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
-import type { SeedstoneRenderer, SeedstoneConfig, SeedstoneConfigOverrides } from 'seedstone'
+import { ref, watch, onMounted, onBeforeUnmount, useTemplateRef } from "vue";
+import type { SeedstoneRenderer, SeedstoneConfig, SeedstoneConfigOverrides } from "seedstone";
 
-const props = defineProps<{ seed: string; cut?: string }>()
-const emit  = defineEmits<{ config: [config: SeedstoneConfig] }>()
+const props = defineProps<{ seed: string; cut?: string }>();
+const emit = defineEmits<{ config: [config: SeedstoneConfig] }>();
 
-const containerRef = useTemplateRef<HTMLDivElement>('container')
-const loading      = ref(true)
+const containerRef = useTemplateRef<HTMLDivElement>("container");
+const loading = ref(true);
 
-let gem:      SeedstoneRenderer | null = null
-let Renderer: typeof SeedstoneRenderer | null = null
-let ro:       ResizeObserver | null = null
+let gem: SeedstoneRenderer | null = null;
+let Renderer: typeof SeedstoneRenderer | null = null;
+let ro: ResizeObserver | null = null;
 // Counter to cancel superseded async mount calls
-let mountId = 0
+let mountId = 0;
 // Last applied cut — lets us skip setConfig() when only the seed changed
-let lastCut: string | undefined
+let lastCut: string | undefined;
 
 function overrides(): SeedstoneConfigOverrides {
-  return props.cut ? { gem: { cut: props.cut } } : {}
+  return props.cut ? { gem: { cut: props.cut } } : {};
 }
 
 async function mount(seed: string) {
-  const id = ++mountId
-  if (!containerRef.value) return
+  const id = ++mountId;
+  if (!containerRef.value) return;
 
   // Lazy-load the library once
   if (!Renderer) {
-    const mod = await import('seedstone')
-    if (id !== mountId) return   // a newer call already took over
-    Renderer = mod.SeedstoneRenderer
+    const mod = await import("seedstone");
+    if (id !== mountId) return; // a newer call already took over
+    Renderer = mod.SeedstoneRenderer;
   }
 
   // Reuse the existing WebGL context — config resolves immediately and the
   // scene reconciles in place off the render path. Only re-apply overrides when
   // the cut actually changed; otherwise a seed change is just update().
   if (gem) {
-    if (props.cut !== lastCut) gem.setConfig(overrides())
-    gem.update(seed)
+    if (props.cut !== lastCut) gem.setConfig(overrides());
+    gem.update(seed);
   } else {
-    loading.value = true
-    const size = containerRef.value.clientWidth || 420
+    loading.value = true;
+    const size = containerRef.value.clientWidth || 420;
     gem = new Renderer(seed, {
-      container:  containerRef.value,
-      width:      size,
-      height:     size,
+      container: containerRef.value,
+      width: size,
+      height: size,
       background: null,
-      config:     overrides(),
+      config: overrides(),
       // Keep the spinner up until shaders are compiled and the first frame is
       // painted, so the gem fades in smoothly instead of stuttering.
-      onReady:    () => { loading.value = false },
-    })
+      onReady: () => {
+        loading.value = false;
+      },
+    });
   }
-  lastCut = props.cut
-  emit('config', gem.config)
+  lastCut = props.cut;
+  emit("config", gem.config);
 }
 
 onMounted(() => {
-  mount(props.seed)
+  mount(props.seed);
 
   ro = new ResizeObserver(() => {
     if (gem && containerRef.value) {
-      const s = containerRef.value.clientWidth
-      gem.resize(s, s)
+      const s = containerRef.value.clientWidth;
+      gem.resize(s, s);
     }
-  })
-  ro.observe(containerRef.value!)
-})
+  });
+  ro.observe(containerRef.value!);
+});
 
 // Single combined watch — seed and cut often change together (gallery picks),
 // so one watcher avoids calling mount() twice per pick.
-watch([() => props.seed, () => props.cut], () => mount(props.seed))
+watch([() => props.seed, () => props.cut], () => mount(props.seed));
 
 onBeforeUnmount(() => {
-  gem?.destroy()
-  ro?.disconnect()
-})
+  gem?.destroy();
+  ro?.disconnect();
+});
 </script>
 
 <template>
@@ -93,18 +95,25 @@ onBeforeUnmount(() => {
 }
 
 .gem-wrap::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -30px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(167,139,250,0.18) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.18) 0%, transparent 70%);
   animation: pulse 3s ease-in-out infinite;
   pointer-events: none;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%       { opacity: 1.0; transform: scale(1.06); }
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
 }
 
 .gem-container {
@@ -125,13 +134,17 @@ onBeforeUnmount(() => {
   z-index: 5;
 }
 .spinner::after {
-  content: '';
+  content: "";
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(167,139,250,0.25);
+  border: 3px solid rgba(167, 139, 250, 0.25);
   border-top-color: #ce93d8;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>

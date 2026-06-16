@@ -2,6 +2,34 @@
   "name": "seedstone",
   "version": "2.0.0",
   "description": "Render a 3D rotating gem from any string",
+  "keywords": [
+    "3d",
+    "avatar",
+    "deterministic",
+    "gem",
+    "gemstone",
+    "generative",
+    "identicon",
+    "three",
+    "threejs",
+    "wallet",
+    "webgl"
+  ],
+  "homepage": "https://seedstone.xyz",
+  "bugs": {
+    "url": "https://github.com/titangmz/seedstone/issues"
+  },
+  "license": "MIT",
+  "author": "titangmz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/titangmz/seedstone"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
   "main": "dist/seedstone.umd.js",
   "module": "dist/seedstone.esm.js",
   "types": "dist/index.d.ts",
@@ -12,10 +40,6 @@
       "require": "./dist/seedstone.umd.js"
     }
   },
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "rollup -c",
     "pretest": "npm run build",
@@ -25,34 +49,9 @@
     "dev:lib": "rollup -c -w",
     "website:dev": "npm run dev --prefix website",
     "website:build": "npm run build --prefix website",
-    "website:preview": "npm run preview --prefix website"
-  },
-  "keywords": [
-    "gem",
-    "gemstone",
-    "3d",
-    "webgl",
-    "three",
-    "threejs",
-    "identicon",
-    "avatar",
-    "generative",
-    "deterministic",
-    "wallet"
-  ],
-  "type": "module",
-  "license": "MIT",
-  "homepage": "https://seedstone.xyz",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/titangmz/seedstone"
-  },
-  "bugs": {
-    "url": "https://github.com/titangmz/seedstone/issues"
-  },
-  "author": "titangmz",
-  "engines": {
-    "node": ">=22"
+    "website:preview": "npm run preview --prefix website",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.0.0",
@@ -60,9 +59,13 @@
     "@rollup/plugin-typescript": "^11.0.0",
     "@types/three": "^0.184.1",
     "concurrently": "^10.0.3",
+    "oxfmt": "^0.55.0",
     "rollup": "^4.0.0",
     "three": "^0.184.0",
     "tslib": "^2.8.1",
     "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -3,7 +3,7 @@ interface ImportMeta {
     pattern: string,
     options: {
       eager: true;
-      import: 'default';
-    }
+      import: "default";
+    },
   ): Record<string, T>;
 }

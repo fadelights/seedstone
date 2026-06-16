@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { flatNormalGeo, pushTri } from './geometry';
+import * as THREE from "three";
+import { flatNormalGeo, pushTri } from "./geometry";
 
 /**
  * Regular n-antiprism: two parallel n-gon caps connected by a belt of
@@ -27,25 +27,45 @@ export function buildAntiprism(n: number, scale = 0.65): THREE.BufferGeometry {
     bot.push([r * Math.cos(ab), -h, r * Math.sin(ab)]);
   }
 
-  const positions: number[] = [], normals: number[] = [], uvs: number[] = [];
+  const positions: number[] = [],
+    normals: number[] = [],
+    uvs: number[] = [];
 
   // ── Top cap ───────────────────────────────────────────────────────────────
   // Fan from top[0]. Winding (top[0], top[k+1], top[k]) → normal points +Y.
   for (let k = 1; k < n - 1; k++) {
-    pushTri(positions, normals, uvs,
-      top[0][0],   top[0][1],   top[0][2],
-      top[k+1][0], top[k+1][1], top[k+1][2],
-      top[k][0],   top[k][1],   top[k][2],
+    pushTri(
+      positions,
+      normals,
+      uvs,
+      top[0][0],
+      top[0][1],
+      top[0][2],
+      top[k + 1][0],
+      top[k + 1][1],
+      top[k + 1][2],
+      top[k][0],
+      top[k][1],
+      top[k][2],
     );
   }
 
   // ── Bottom cap ────────────────────────────────────────────────────────────
   // Fan from bot[0]. Winding (bot[0], bot[k], bot[k+1]) → normal points -Y.
   for (let k = 1; k < n - 1; k++) {
-    pushTri(positions, normals, uvs,
-      bot[0][0],   bot[0][1],   bot[0][2],
-      bot[k][0],   bot[k][1],   bot[k][2],
-      bot[k+1][0], bot[k+1][1], bot[k+1][2],
+    pushTri(
+      positions,
+      normals,
+      uvs,
+      bot[0][0],
+      bot[0][1],
+      bot[0][2],
+      bot[k][0],
+      bot[k][1],
+      bot[k][2],
+      bot[k + 1][0],
+      bot[k + 1][1],
+      bot[k + 1][2],
     );
   }
 
@@ -53,16 +73,34 @@ export function buildAntiprism(n: number, scale = 0.65): THREE.BufferGeometry {
   for (let k = 0; k < n; k++) {
     const kn = (k + 1) % n;
     // "Up" tri: top[k] → top[kn] → bot[k] → outward radial normal ✓
-    pushTri(positions, normals, uvs,
-      top[k][0],  top[k][1],  top[k][2],
-      top[kn][0], top[kn][1], top[kn][2],
-      bot[k][0],  bot[k][1],  bot[k][2],
+    pushTri(
+      positions,
+      normals,
+      uvs,
+      top[k][0],
+      top[k][1],
+      top[k][2],
+      top[kn][0],
+      top[kn][1],
+      top[kn][2],
+      bot[k][0],
+      bot[k][1],
+      bot[k][2],
     );
     // "Down" tri: top[kn] → bot[kn] → bot[k] → outward radial normal ✓
-    pushTri(positions, normals, uvs,
-      top[kn][0], top[kn][1], top[kn][2],
-      bot[kn][0], bot[kn][1], bot[kn][2],
-      bot[k][0],  bot[k][1],  bot[k][2],
+    pushTri(
+      positions,
+      normals,
+      uvs,
+      top[kn][0],
+      top[kn][1],
+      top[kn][2],
+      bot[kn][0],
+      bot[kn][1],
+      bot[kn][2],
+      bot[k][0],
+      bot[k][1],
+      bot[k][2],
     );
   }
 

@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { extractFlatNormals } from './geometry';
+import * as THREE from "three";
+import { extractFlatNormals } from "./geometry";
 
 /**
  * Geodesic sphere — icosahedron subdivided `detail` times.

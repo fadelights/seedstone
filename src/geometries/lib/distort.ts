@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 // ── Tuning knobs ──────────────────────────────────────────────────────────────
 // Adjust these to change the range of distortion at perfection = 0.
@@ -13,8 +13,8 @@ export const MAX_VERTEX_NOISE = 0.15;
 
 function u32(n: number): number {
   n = n >>> 0;
-  n = (Math.imul(((n >>> 16) ^ n) >>> 0, 0x45d9f3b)) >>> 0;
-  n = (Math.imul(((n >>> 16) ^ n) >>> 0, 0x45d9f3b)) >>> 0;
+  n = Math.imul(((n >>> 16) ^ n) >>> 0, 0x45d9f3b) >>> 0;
+  n = Math.imul(((n >>> 16) ^ n) >>> 0, 0x45d9f3b) >>> 0;
   return ((n >>> 16) ^ n) >>> 0;
 }
 
@@ -25,10 +25,7 @@ function h01(seed: number, i: number): number {
 
 // ── Scale distortion ──────────────────────────────────────────────────────────
 
-function applyScale(
-  geo: THREE.BufferGeometry,
-  sx: number, sy: number, sz: number,
-): void {
+function applyScale(geo: THREE.BufferGeometry, sx: number, sy: number, sz: number): void {
   const pos = geo.attributes.position as THREE.BufferAttribute;
   for (let i = 0; i < pos.count; i++) {
     pos.setXYZ(i, pos.getX(i) * sx, pos.getY(i) * sy, pos.getZ(i) * sz);
@@ -43,11 +40,7 @@ function applyScale(
  * Vertices that share a position get the same displacement so face connectivity
  * is preserved — no gaps appear between adjacent faces.
  */
-function applyVertexNoise(
-  geo: THREE.BufferGeometry,
-  amplitude: number,
-  seed: number,
-): void {
+function applyVertexNoise(geo: THREE.BufferGeometry, amplitude: number, seed: number): void {
   if (amplitude <= 0) return;
   const pos = geo.attributes.position as THREE.BufferAttribute;
   const SNAP = 1e4;
@@ -62,7 +55,7 @@ function applyVertexNoise(
       let dy = h01(seed, gi * 3 + 1) - 0.5;
       let dz = h01(seed, gi * 3 + 2) - 0.5;
       const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-      groups.set(key, [dx / len * amplitude, dy / len * amplitude, dz / len * amplitude]);
+      groups.set(key, [(dx / len) * amplitude, (dy / len) * amplitude, (dz / len) * amplitude]);
     }
     const [dx, dy, dz] = groups.get(key)!;
     pos.setXYZ(i, pos.getX(i) + dx, pos.getY(i) + dy, pos.getZ(i) + dz);
@@ -100,7 +93,7 @@ export function applyDistortions(geo: THREE.BufferGeometry, distortion: Distorti
   const sx0 = 1 + (distortion.scaleX - 0.5) * 2 * MAX_SCALE_JITTER * (1 - p);
   const sy0 = 1 + (distortion.scaleY - 0.5) * 2 * MAX_SCALE_JITTER * (1 - p);
   const sz0 = 1 + (distortion.scaleZ - 0.5) * 2 * MAX_SCALE_JITTER * (1 - p);
-  const gm  = Math.cbrt(sx0 * sy0 * sz0);
+  const gm = Math.cbrt(sx0 * sy0 * sz0);
   applyScale(geo, sx0 / gm, sy0 / gm, sz0 / gm);
 
   // Vertex noise: amplitude shrinks to zero as perfection → 1

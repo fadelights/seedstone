@@ -1,44 +1,81 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount } from "vue";
 
 const USE_CASES = [
-  { seed: 'agent://atlas',    title: 'AI Agents',              tag: 'Per-agent identity', desc: 'Give every autonomous agent a face. A stone that follows it across logs, dashboards, and handoffs.' },
-  { seed: '0x71C7856E9D4a4C6A', title: 'Wallets',              tag: 'Crypto & Web3',      desc: 'Turn an unreadable address into a recognizable gem. Spot your wallet instantly without reading a single hex character.' },
-  { seed: 'api_key_7731',    title: 'Developer platforms',     tag: 'Keys & services',   desc: 'Deterministic avatars for keys, services, and endpoints. Generated, never stored.' },
-  { seed: 'Helix Collective', title: 'Teams & communities',    tag: 'Groups & spaces',   desc: 'Memorable identities for squads, guilds, and spaces that feel earned and permanent.' },
-  { seed: 'DOC-99812',       title: 'Documents & records',     tag: 'Files & ledgers',   desc: 'Fingerprint files, invoices, and records so any item is identifiable at a glance.' },
-  { seed: '@satoshi',        title: 'People & profiles',       tag: 'Usernames',         desc: 'A profile identity that is unique, consistent, and impossible to spoof by sight.' },
-]
+  {
+    seed: "agent://atlas",
+    title: "AI Agents",
+    tag: "Per-agent identity",
+    desc: "Give every autonomous agent a face. A stone that follows it across logs, dashboards, and handoffs.",
+  },
+  {
+    seed: "0x71C7856E9D4a4C6A",
+    title: "Wallets",
+    tag: "Crypto & Web3",
+    desc: "Turn an unreadable address into a recognizable gem. Spot your wallet instantly without reading a single hex character.",
+  },
+  {
+    seed: "api_key_7731",
+    title: "Developer platforms",
+    tag: "Keys & services",
+    desc: "Deterministic avatars for keys, services, and endpoints. Generated, never stored.",
+  },
+  {
+    seed: "Helix Collective",
+    title: "Teams & communities",
+    tag: "Groups & spaces",
+    desc: "Memorable identities for squads, guilds, and spaces that feel earned and permanent.",
+  },
+  {
+    seed: "DOC-99812",
+    title: "Documents & records",
+    tag: "Files & ledgers",
+    desc: "Fingerprint files, invoices, and records so any item is identifiable at a glance.",
+  },
+  {
+    seed: "@satoshi",
+    title: "People & profiles",
+    tag: "Usernames",
+    desc: "A profile identity that is unique, consistent, and impossible to spoof by sight.",
+  },
+];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ucGems: any[] = []
-let io: IntersectionObserver | null = null
+const ucGems: any[] = [];
+let io: IntersectionObserver | null = null;
 
 onMounted(() => {
   // Build each thumbnail's gem only as it nears the viewport. These sit below
   // the fold, so this keeps their (synchronous) construction off the critical
   // first second, where it would otherwise starve the hero gem's animation.
   io = new IntersectionObserver(
-    (entries) => entries.forEach(async (entry) => {
-      if (!entry.isIntersecting) return
-      const el = entry.target as HTMLDivElement
-      io!.unobserve(el)   // build once
-      const { SeedstoneRenderer } = await import('seedstone')
-      if (!el.isConnected) return
-      const s = el.clientWidth || 104
-      ucGems.push(new SeedstoneRenderer(el.dataset.ucSeed!, {
-        container: el, width: s, height: s, background: null, targetFPS: 24,
-      }))
-    }),
-    { rootMargin: '200px' },   // start building just before they scroll in
-  )
-  document.querySelectorAll<HTMLDivElement>('[data-uc-seed]').forEach((el) => io!.observe(el))
-})
+    (entries) =>
+      entries.forEach(async (entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target as HTMLDivElement;
+        io!.unobserve(el); // build once
+        const { SeedstoneRenderer } = await import("seedstone");
+        if (!el.isConnected) return;
+        const s = el.clientWidth || 104;
+        ucGems.push(
+          new SeedstoneRenderer(el.dataset.ucSeed!, {
+            container: el,
+            width: s,
+            height: s,
+            background: null,
+            targetFPS: 24,
+          }),
+        );
+      }),
+    { rootMargin: "200px" }, // start building just before they scroll in
+  );
+  document.querySelectorAll<HTMLDivElement>("[data-uc-seed]").forEach((el) => io!.observe(el));
+});
 
 onBeforeUnmount(() => {
-  io?.disconnect()
-  ucGems.forEach((g) => g.destroy())
-})
+  io?.disconnect();
+  ucGems.forEach((g) => g.destroy());
+});
 </script>
 
 <template>
@@ -46,8 +83,11 @@ onBeforeUnmount(() => {
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow">Where it lives</span>
-        <h2 class="sec-h2">A visual identity layer<br>for everything.</h2>
-        <p class="sec-lede">Wherever an identifier appears, a Seedstone makes it instantly recognizable — and impossible to confuse.</p>
+        <h2 class="sec-h2">A visual identity layer<br />for everything.</h2>
+        <p class="sec-lede">
+          Wherever an identifier appears, a Seedstone makes it instantly recognizable — and
+          impossible to confuse.
+        </p>
       </div>
       <div class="uc-grid">
         <div v-for="uc in USE_CASES" :key="uc.seed" class="uc">
@@ -94,24 +134,33 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-@media (max-width: 860px) { .uc-grid { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .uc-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .uc {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 24px;
-  transition: border-color .25s, transform .25s;
+  transition:
+    border-color 0.25s,
+    transform 0.25s;
   position: relative;
   overflow: hidden;
 }
-.uc:hover { border-color: var(--line-2); transform: translateY(-3px); }
+.uc:hover {
+  border-color: var(--line-2);
+  transform: translateY(-3px);
+}
 
 .ucg {
   width: 104px;
   height: 104px;
   margin-bottom: 6px;
-  background: radial-gradient(circle at 50% 45%, oklch(0.42 0.13 290 / .4), transparent 68%);
+  background: radial-gradient(circle at 50% 45%, oklch(0.42 0.13 290 / 0.4), transparent 68%);
   border-radius: 12px;
   overflow: hidden;
   position: relative;
@@ -130,15 +179,15 @@ onBeforeUnmount(() => {
   color: var(--text);
 }
 .uc p {
-  color: #9491A3;
+  color: #9491a3;
   font-size: 14px;
   margin-top: 8px;
   line-height: 1.58;
 }
 .uc-tag {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 10.5px;
-  letter-spacing: .16em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--violet);
   margin-top: 14px;

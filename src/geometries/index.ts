@@ -17,13 +17,13 @@
  * The cut becomes available immediately and is picked by the DNA system.
  */
 
-import * as THREE from 'three';
+import * as THREE from "three";
 
 // ── Contract ──────────────────────────────────────────────────────────────────
 
 export interface GemCutModule {
   /** Unique lowercase identifier, e.g. 'garnet', 'zircon'. */
-  name:  string;
+  name: string;
   /** Build the base BufferGeometry for this cut. */
   build: () => THREE.BufferGeometry;
 }
@@ -32,16 +32,16 @@ export interface GemCutModule {
 // Rollup (and Vite) expand import.meta.glob at build time.
 // We use a synchronous eager glob so no async is needed at runtime.
 
-const modules = import.meta.glob<GemCutModule>('./*.ts', {
+const modules = import.meta.glob<GemCutModule>("./*.ts", {
   eager: true,
-  import: 'default',
+  import: "default",
 });
 
 const GEM_CUTS = new Map<string, GemCutModule>();
 
 for (const mod of Object.values(modules)) {
   // Skip the index itself (no default export with a `name` field)
-  if (mod && typeof mod.name === 'string' && typeof mod.build === 'function') {
+  if (mod && typeof mod.name === "string" && typeof mod.build === "function") {
     GEM_CUTS.set(mod.name, mod);
   }
 }

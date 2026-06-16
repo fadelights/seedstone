@@ -1,14 +1,14 @@
-import * as THREE from 'three';
-import { hslToHex } from './color';
-import type { SeedstoneConfig } from '../config';
+import * as THREE from "three";
+import { hslToHex } from "./color";
+import type { SeedstoneConfig } from "../config";
 
-type OrbitConfig = SeedstoneConfig['lights']['orbits'][number];
+type OrbitConfig = SeedstoneConfig["lights"]["orbits"][number];
 
 interface OrbitingLight {
   light: THREE.PointLight;
-  cfg:   OrbitConfig;
-  phase: number;   // radians, from cfg.phaseDeg
-  speed: number;   // cfg.speed * gem.speed
+  cfg: OrbitConfig;
+  phase: number; // radians, from cfg.phaseDeg
+  speed: number; // cfg.speed * gem.speed
 }
 
 /**
@@ -19,10 +19,10 @@ interface OrbitingLight {
  * the schema, so the light objects never need rebuilding.
  */
 export class Lights {
-  private cfg:     SeedstoneConfig['lights'];
+  private cfg: SeedstoneConfig["lights"];
   private ambient: THREE.AmbientLight;
-  private orbits:  OrbitingLight[];
-  private rim:     THREE.DirectionalLight;
+  private orbits: OrbitingLight[];
+  private rim: THREE.DirectionalLight;
 
   constructor(scene: THREE.Scene, cfg: SeedstoneConfig) {
     this.cfg = cfg.lights;
@@ -31,13 +31,13 @@ export class Lights {
     this.ambient = new THREE.AmbientLight(0xffffff, lights.ambientIntensity);
     scene.add(this.ambient);
 
-    this.orbits = lights.orbits.map(orbitCfg => {
+    this.orbits = lights.orbits.map((orbitCfg) => {
       const light = new THREE.PointLight();
       light.position.set(orbitCfg.radius, orbitCfg.y, 0);
       scene.add(light);
       return {
         light,
-        cfg:   orbitCfg,
+        cfg: orbitCfg,
         phase: (orbitCfg.phaseDeg / 180) * Math.PI,
         speed: orbitCfg.speed * cfg.gem.speed,
       };
@@ -60,19 +60,27 @@ export class Lights {
     const accent2Hue = (accent1Hue + lights.accent2HueOffset) % 360;
 
     for (const orbit of this.orbits) {
-      const hue = orbit.cfg.tint === 'accent1' ? accent1Hue
-                : orbit.cfg.tint === 'accent2' ? accent2Hue
-                : null;
-      const color = hue !== null
-        ? hslToHex(hue, lights.tintSaturation, lights.tintLightness)
-        : orbit.cfg.color;
+      const hue =
+        orbit.cfg.tint === "accent1"
+          ? accent1Hue
+          : orbit.cfg.tint === "accent2"
+            ? accent2Hue
+            : null;
+      const color =
+        hue !== null ? hslToHex(hue, lights.tintSaturation, lights.tintLightness) : orbit.cfg.color;
       orbit.light.color.set(color);
       orbit.light.intensity = orbit.cfg.intensity;
-      orbit.light.distance  = lights.pointLightRange;
+      orbit.light.distance = lights.pointLightRange;
       orbit.speed = orbit.cfg.speed * cfg.gem.speed;
     }
 
-    this.rim.color.set(hslToHex((cfg.gem.hue + lights.rim.hueOffset) % 360, lights.rim.saturation, lights.rim.lightness));
+    this.rim.color.set(
+      hslToHex(
+        (cfg.gem.hue + lights.rim.hueOffset) % 360,
+        lights.rim.saturation,
+        lights.rim.lightness,
+      ),
+    );
     this.rim.intensity = lights.rim.intensity;
     this.rim.position.set(...lights.rim.position);
   }

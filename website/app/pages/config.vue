@@ -1,86 +1,125 @@
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
-import type { SeedstoneRenderer, ScalarParam, ChoiceParam } from 'seedstone'
+import { reactive, ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from "vue";
+import type { SeedstoneRenderer, ScalarParam, ChoiceParam } from "seedstone";
 
-useSeoMeta({ title: 'Seedstone — Config lab', robots: 'noindex' })
+useSeoMeta({ title: "Seedstone — Config lab", robots: "noindex" });
 
-interface NumberKnob { kind: 'number'; path: string; mode: 'config' | 'dna'; min: number; max: number; step: number; value: number }
-interface ChoiceKnob { kind: 'pick';   path: string; mode: 'config' | 'dna'; options: string[]; value: string }
-type Knob = NumberKnob | ChoiceKnob
-interface Section { title: string; knobs: Knob[] }
+interface NumberKnob {
+  kind: "number";
+  path: string;
+  mode: "config" | "dna";
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+}
+interface ChoiceKnob {
+  kind: "pick";
+  path: string;
+  mode: "config" | "dna";
+  options: string[];
+  value: string;
+}
+type Knob = NumberKnob | ChoiceKnob;
+interface Section {
+  title: string;
+  knobs: Knob[];
+}
 
 // '' in values means "seed-driven" for an unpinned pick() knob.
-const SEED_DRIVEN = ''
+const SEED_DRIVEN = "";
 
-const containerRef = useTemplateRef<HTMLDivElement>('container')
-const seed     = ref('')
-const loaded   = ref(false)
-const copied   = ref(false)
-const sections = ref<Section[]>([])
-const values   = reactive<Record<string, number | string>>({})
-const defaults = reactive<Record<string, number | string>>({})
+const containerRef = useTemplateRef<HTMLDivElement>("container");
+const seed = ref("");
+const loaded = ref(false);
+const copied = ref(false);
+const sections = ref<Section[]>([]);
+const values = reactive<Record<string, number | string>>({});
+const defaults = reactive<Record<string, number | string>>({});
 // Current and default modes for number knobs — lets the user flip dna ↔ config at override time.
-const modes    = reactive<Record<string, 'config' | 'dna'>>({})
-const defModes = reactive<Record<string, 'config' | 'dna'>>({})
+const modes = reactive<Record<string, "config" | "dna">>({});
+const defModes = reactive<Record<string, "config" | "dna">>({});
 
-let gem: SeedstoneRenderer | null = null
-let ro: ResizeObserver | null = null
-let applyTimer: ReturnType<typeof setTimeout> | undefined
+let gem: SeedstoneRenderer | null = null;
+let ro: ResizeObserver | null = null;
+let applyTimer: ReturnType<typeof setTimeout> | undefined;
 
 // ── Schema walking ────────────────────────────────────────────────────────────
 
 function isScalarParam(v: unknown): v is ScalarParam {
-  return typeof v === 'object' && v !== null && 'mode' in v && 'min' in v
+  return typeof v === "object" && v !== null && "mode" in v && "min" in v;
 }
 
 function isChoiceParam(v: unknown): v is ChoiceParam {
-  return typeof v === 'object' && v !== null && 'mode' in v && 'options' in v
+  return typeof v === "object" && v !== null && "mode" in v && "options" in v;
 }
 
 /** Recursively collect all parameter leaves from the schema. */
 function collectKnobs(obj: unknown, path: string[] = []): Knob[] {
   if (isScalarParam(obj)) {
-    return [{ kind: 'number', path: path.join('.'), mode: obj.mode, min: obj.min, max: obj.max, step: obj.step, value: obj.value }]
+    return [
+      {
+        kind: "number",
+        path: path.join("."),
+        mode: obj.mode,
+        min: obj.min,
+        max: obj.max,
+        step: obj.step,
+        value: obj.value,
+      },
+    ];
   }
   if (isChoiceParam(obj)) {
-    return [{ kind: 'pick', path: path.join('.'), mode: obj.mode, options: obj.options(), value: obj.value ?? SEED_DRIVEN }]
+    return [
+      {
+        kind: "pick",
+        path: path.join("."),
+        mode: obj.mode,
+        options: obj.options(),
+        value: obj.value ?? SEED_DRIVEN,
+      },
+    ];
   }
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return []
-  return Object.entries(obj).flatMap(([k, v]) => collectKnobs(v, [...path, k]))
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
+  return Object.entries(obj).flatMap(([k, v]) => collectKnobs(v, [...path, k]));
 }
 
 /** Derive a section title from a dot-path: 2 segments for deep paths, 1 for shallow. */
 function sectionFor(path: string): string {
-  const parts = path.split('.')
-  const raw   = parts.slice(0, parts.length >= 3 ? 2 : 1).join(' ')
-  return raw.charAt(0).toUpperCase() + raw.slice(1)
+  const parts = path.split(".");
+  const raw = parts.slice(0, parts.length >= 3 ? 2 : 1).join(" ");
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 // ── Path helpers ──────────────────────────────────────────────────────────────
 
 function setPath(obj: Record<string, any>, path: string, value: unknown): void {
-  const keys = path.split('.')
-  const last = keys.pop()!
-  let cursor = obj
-  for (const key of keys) cursor = (cursor[key] ??= {})
-  cursor[last] = value
+  const keys = path.split(".");
+  const last = keys.pop()!;
+  let cursor = obj;
+  for (const key of keys) cursor = cursor[key] ??= {};
+  cursor[last] = value;
 }
 
 function labelFor(path: string): string {
-  return path.split('.').at(-1)!.replace(/([A-Z])/g, ' $1').toLowerCase()
+  return path
+    .split(".")
+    .at(-1)!
+    .replace(/([A-Z])/g, " $1")
+    .toLowerCase();
 }
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
 
 function toggleMode(path: string): void {
-  modes[path] = modes[path] === 'dna' ? 'config' : 'dna'
-  scheduleApply()
+  modes[path] = modes[path] === "dna" ? "config" : "dna";
+  scheduleApply();
 }
 
 function isKnobDirty(knob: Knob): boolean {
-  if (knob.kind === 'pick') return values[knob.path] !== defaults[knob.path]
-  if (modes[knob.path] !== defModes[knob.path]) return true
-  return modes[knob.path] === 'config' && values[knob.path] !== defaults[knob.path]
+  if (knob.kind === "pick") return values[knob.path] !== defaults[knob.path];
+  if (modes[knob.path] !== defModes[knob.path]) return true;
+  return modes[knob.path] === "config" && values[knob.path] !== defaults[knob.path];
 }
 
 // ── Overrides ─────────────────────────────────────────────────────────────────
@@ -88,144 +127,148 @@ function isKnobDirty(knob: Knob): boolean {
 // SEEDED is the override marker for "make this seed-generated" — what seeded()
 // returns. We carry it as a plain object so it both applies live (mergeSchema
 // understands it) and serializes back to a seeded() call in the copied code.
-const SEEDED = { mode: 'dna' } as const
+const SEEDED = { mode: "dna" } as const;
 
 const changed = computed(() => {
-  const result: Array<[string, unknown]> = []
+  const result: Array<[string, unknown]> = [];
   for (const path of Object.keys(values)) {
     if (path in defModes) {
-      const cur = modes[path]
-      if (cur === 'dna') {
+      const cur = modes[path];
+      if (cur === "dna") {
         // seed-driven: only an override if it was pinned by default
-        if (cur !== defModes[path]) result.push([path, SEEDED])
+        if (cur !== defModes[path]) result.push([path, SEEDED]);
       } else {
         // pinned: emit a plain number when the mode flipped or the value changed
-        if (cur !== defModes[path] || values[path] !== defaults[path]) result.push([path, values[path]])
+        if (cur !== defModes[path] || values[path] !== defaults[path])
+          result.push([path, values[path]]);
       }
     } else {
       // pick param
-      if (values[path] !== defaults[path]) result.push([path, values[path]])
+      if (values[path] !== defaults[path]) result.push([path, values[path]]);
     }
   }
-  return result
-})
+  return result;
+});
 
 const overrides = computed(() => {
-  const result: Record<string, any> = {}
-  for (const [path, value] of changed.value) setPath(result, path, value)
-  return result
-})
+  const result: Record<string, any> = {};
+  for (const [path, value] of changed.value) setPath(result, path, value);
+  return result;
+});
 
 /** Pretty-print the overrides tree as a JS literal, rendering the seeded marker
  *  as a `seeded()` call so the copied snippet matches the public API. */
 function serializeOverrides(obj: Record<string, any>, indent = 2): string {
-  const pad = ' '.repeat(indent)
+  const pad = " ".repeat(indent);
   const entries = Object.entries(obj).map(([k, v]) => {
-    let val: string
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      val = v.mode === 'dna' ? 'seeded()' : serializeOverrides(v, indent + 2)
+    let val: string;
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      val = v.mode === "dna" ? "seeded()" : serializeOverrides(v, indent + 2);
     } else {
-      val = typeof v === 'string' ? `'${v}'` : String(v)
+      val = typeof v === "string" ? `'${v}'` : String(v);
     }
-    return `${pad}${k}: ${val}`
-  })
-  return `{\n${entries.join(',\n')}\n${' '.repeat(indent - 2)}}`
+    return `${pad}${k}: ${val}`;
+  });
+  return `{\n${entries.join(",\n")}\n${" ".repeat(indent - 2)}}`;
 }
 
-const usesSeeded = computed(() => changed.value.some(([, v]) => (v as any)?.mode === 'dna'))
+const usesSeeded = computed(() => changed.value.some(([, v]) => (v as any)?.mode === "dna"));
 
 const overridesCode = computed(() => {
-  const body = serializeOverrides(overrides.value)
-  const literal = `config: ${body}`
-  return usesSeeded.value ? `import { seeded } from 'seedstone'\n\n${literal}` : literal
-})
+  const body = serializeOverrides(overrides.value);
+  const literal = `config: ${body}`;
+  return usesSeeded.value ? `import { seeded } from 'seedstone'\n\n${literal}` : literal;
+});
 
 function scheduleApply(): void {
-  clearTimeout(applyTimer)
-  applyTimer = setTimeout(() => gem?.setConfig(overrides.value), 120)
+  clearTimeout(applyTimer);
+  applyTimer = setTimeout(() => gem?.setConfig(overrides.value), 120);
 }
 
 function resetAll(): void {
-  for (const path of Object.keys(values)) values[path] = defaults[path]
-  for (const path of Object.keys(modes)) modes[path] = defModes[path]
-  scheduleApply()
+  for (const path of Object.keys(values)) values[path] = defaults[path];
+  for (const path of Object.keys(modes)) modes[path] = defModes[path];
+  scheduleApply();
 }
 
 async function copyOverrides(): Promise<void> {
-  await navigator.clipboard.writeText(overridesCode.value)
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 1500)
+  await navigator.clipboard.writeText(overridesCode.value);
+  copied.value = true;
+  setTimeout(() => {
+    copied.value = false;
+  }, 1500);
 }
 
 function onSeedInput(): void {
-  gem?.update(seed.value.trim() || 'seedstone')
+  gem?.update(seed.value.trim() || "seedstone");
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-  const { SeedstoneRenderer, configSchema } = await import('seedstone')
+  const { SeedstoneRenderer, configSchema } = await import("seedstone");
 
   // Walk configSchema to discover every knob — no manual list. c() knobs get
   // sliders; d() knobs render as seed-driven with a toggle to pin them; pick()
   // knobs get a select. Add/remove a knob or flip its mode by editing
   // c()/d()/pick() in src/config.ts.
-  const allKnobs = collectKnobs(configSchema)
+  const allKnobs = collectKnobs(configSchema);
 
-  const groups = new Map<string, Knob[]>()
+  const groups = new Map<string, Knob[]>();
   for (const knob of allKnobs) {
-    const section = sectionFor(knob.path)
-    const list = groups.get(section) ?? []
-    list.push(knob)
-    groups.set(section, list)
-    if (knob.kind === 'number') {
-      defModes[knob.path] = knob.mode
-      modes[knob.path]    = knob.mode
+    const section = sectionFor(knob.path);
+    const list = groups.get(section) ?? [];
+    list.push(knob);
+    groups.set(section, list);
+    if (knob.kind === "number") {
+      defModes[knob.path] = knob.mode;
+      modes[knob.path] = knob.mode;
       // knob.value is always set: fixed value for c(), midpoint for d()
-      defaults[knob.path] = knob.value
-      values[knob.path]   = knob.value
+      defaults[knob.path] = knob.value;
+      values[knob.path] = knob.value;
     } else {
       // pick knob — seed-driven by default unless the schema pins it
-      defaults[knob.path] = knob.mode === 'config' ? knob.value : SEED_DRIVEN
-      values[knob.path]   = knob.mode === 'config' ? knob.value : SEED_DRIVEN
+      defaults[knob.path] = knob.mode === "config" ? knob.value : SEED_DRIVEN;
+      values[knob.path] = knob.mode === "config" ? knob.value : SEED_DRIVEN;
     }
   }
-  sections.value = [...groups.entries()].map(([title, knobs]) => ({ title, knobs }))
-  loaded.value = true
+  sections.value = [...groups.entries()].map(([title, knobs]) => ({ title, knobs }));
+  loaded.value = true;
 
-  const size = containerRef.value!.clientWidth || 420
-  gem = new SeedstoneRenderer('seedstone', {
-    container:  containerRef.value!,
-    width:      size,
-    height:     size,
+  const size = containerRef.value!.clientWidth || 420;
+  gem = new SeedstoneRenderer("seedstone", {
+    container: containerRef.value!,
+    width: size,
+    height: size,
     background: null,
-  })
+  });
 
   ro = new ResizeObserver(() => {
-    const s = containerRef.value?.clientWidth
-    if (gem && s) gem.resize(s, s)
-  })
-  ro.observe(containerRef.value!)
-})
+    const s = containerRef.value?.clientWidth;
+    if (gem && s) gem.resize(s, s);
+  });
+  ro.observe(containerRef.value!);
+});
 
 onBeforeUnmount(() => {
-  clearTimeout(applyTimer)
-  gem?.destroy()
-  ro?.disconnect()
-})
+  clearTimeout(applyTimer);
+  gem?.destroy();
+  ro?.disconnect();
+});
 </script>
 
 <template>
   <div class="config-page">
-
     <header class="header">
       <NuxtLink to="/" class="back-link">← seedstone</NuxtLink>
       <h1>Config lab</h1>
-      <p class="sub">Tune the renderer live, then copy the <code>config</code> override for <code>new SeedstoneRenderer()</code>.</p>
+      <p class="sub">
+        Tune the renderer live, then copy the <code>config</code> override for
+        <code>new SeedstoneRenderer()</code>.
+      </p>
     </header>
 
     <div class="layout">
-
       <!-- ── Left: gem preview + output ──────────────────────────────────── -->
       <aside class="preview">
         <div ref="container" class="gem-box" />
@@ -240,7 +283,11 @@ onBeforeUnmount(() => {
         <div class="actions">
           <button class="btn ghost" :disabled="!changed.length" @click="resetAll">Reset</button>
           <button class="btn" :disabled="!changed.length" @click="copyOverrides">
-            {{ copied ? 'Copied ✓' : `Copy ${changed.length} override${changed.length === 1 ? '' : 's'}` }}
+            {{
+              copied
+                ? "Copied ✓"
+                : `Copy ${changed.length} override${changed.length === 1 ? "" : "s"}`
+            }}
           </button>
         </div>
         <pre v-if="changed.length" class="diff">{{ overridesCode }}</pre>
@@ -279,9 +326,15 @@ onBeforeUnmount(() => {
                 <button
                   class="mode-toggle"
                   :class="modes[knob.path]"
-                  :title="modes[knob.path] === 'dna' ? 'seed-driven — click to pin' : 'pinned — click to release'"
+                  :title="
+                    modes[knob.path] === 'dna'
+                      ? 'seed-driven — click to pin'
+                      : 'pinned — click to release'
+                  "
                   @click.prevent="toggleMode(knob.path)"
-                >{{ modes[knob.path] === 'dna' ? 'dna' : 'pin' }}</button>
+                >
+                  {{ modes[knob.path] === "dna" ? "dna" : "pin" }}
+                </button>
               </label>
 
               <template v-if="modes[knob.path] === 'config'">
@@ -308,7 +361,6 @@ onBeforeUnmount(() => {
           </div>
         </section>
       </main>
-
     </div>
   </div>
 </template>
@@ -324,14 +376,18 @@ onBeforeUnmount(() => {
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────────── */
-.header { margin-bottom: 28px; }
+.header {
+  margin-bottom: 28px;
+}
 
 .back-link {
   font-size: 0.8rem;
   color: var(--muted);
   text-decoration: none;
 }
-.back-link:hover { color: var(--accent); }
+.back-link:hover {
+  color: var(--accent);
+}
 
 .header h1 {
   margin: 10px 0 6px;
@@ -346,10 +402,10 @@ onBeforeUnmount(() => {
 .sub {
   margin: 0;
   font-size: 0.85rem;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255, 255, 255, 0.4);
 }
 .sub code {
-  font-family: 'Consolas', 'SF Mono', monospace;
+  font-family: "Consolas", "SF Mono", monospace;
   color: var(--accent);
 }
 
@@ -365,7 +421,10 @@ onBeforeUnmount(() => {
     grid-template-columns: 380px 1fr;
     align-items: start;
   }
-  .preview { position: sticky; top: 24px; }
+  .preview {
+    position: sticky;
+    top: 24px;
+  }
 }
 
 /* ── Preview column ─────────────────────────────────────────────────────────── */
@@ -381,7 +440,7 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
-  background: rgba(0,0,0,0.25);
+  background: rgba(0, 0, 0, 0.25);
 }
 .gem-box :deep(canvas) {
   width: 100% !important;
@@ -394,12 +453,14 @@ onBeforeUnmount(() => {
   padding: 9px 13px;
   border-radius: 9px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text);
   font-size: 0.9rem;
   outline: none;
 }
-.seed-input:focus { border-color: rgba(167,139,250,0.6); }
+.seed-input:focus {
+  border-color: rgba(167, 139, 250, 0.6);
+}
 
 .btn {
   padding: 9px 16px;
@@ -412,24 +473,34 @@ onBeforeUnmount(() => {
   color: #fff;
   white-space: nowrap;
 }
-.btn:hover:not(:disabled) { opacity: 0.88; }
-.btn:disabled { opacity: 0.35; cursor: default; }
+.btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
 .btn.ghost {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
 }
 
-.actions { display: flex; gap: 8px; }
-.actions .btn { flex: 1; }
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.actions .btn {
+  flex: 1;
+}
 
 .diff {
   margin: 0;
   padding: 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: rgba(0,0,0,0.35);
-  font-family: 'Consolas', 'SF Mono', monospace;
+  background: rgba(0, 0, 0, 0.35);
+  font-family: "Consolas", "SF Mono", monospace;
   font-size: 0.72rem;
   line-height: 1.55;
   color: #a5e8c8;
@@ -440,7 +511,7 @@ onBeforeUnmount(() => {
 .diff-empty {
   margin: 0;
   font-size: 0.78rem;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255, 255, 255, 0.25);
 }
 
 /* ── Knobs column ───────────────────────────────────────────────────────────── */
@@ -478,10 +549,12 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 6px;
   font-size: 0.78rem;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255, 255, 255, 0.55);
   overflow: hidden;
 }
-.knob.dirty label { color: var(--accent); }
+.knob.dirty label {
+  color: var(--accent);
+}
 
 .knob-name {
   white-space: nowrap;
@@ -504,41 +577,45 @@ onBeforeUnmount(() => {
   transition: opacity 0.1s;
 }
 .mode-toggle.dna {
-  background: rgba(167,139,250,0.15);
-  border-color: rgba(167,139,250,0.35);
+  background: rgba(167, 139, 250, 0.15);
+  border-color: rgba(167, 139, 250, 0.35);
   color: #a78bfa;
 }
 .mode-toggle.config {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
 }
-.mode-toggle:hover { opacity: 0.75; }
+.mode-toggle:hover {
+  opacity: 0.75;
+}
 
-.knob input[type='range'] {
+.knob input[type="range"] {
   width: 100%;
   accent-color: #a78bfa;
 }
 
-.knob input[type='number'] {
+.knob input[type="number"] {
   width: 100%;
   box-sizing: border-box;
   padding: 5px 8px;
   border-radius: 7px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
   font-size: 0.76rem;
-  font-family: 'Consolas', 'SF Mono', monospace;
+  font-family: "Consolas", "SF Mono", monospace;
   outline: none;
 }
-.knob input[type='number']:focus { border-color: rgba(167,139,250,0.6); }
+.knob input[type="number"]:focus {
+  border-color: rgba(167, 139, 250, 0.6);
+}
 
 .dna-range {
   grid-column: 2 / -1;
   font-size: 0.74rem;
-  font-family: 'Consolas', 'SF Mono', monospace;
-  color: rgba(255,255,255,0.28);
+  font-family: "Consolas", "SF Mono", monospace;
+  color: rgba(255, 255, 255, 0.28);
 }
 
 .pick-select {
@@ -546,19 +623,27 @@ onBeforeUnmount(() => {
   padding: 5px 8px;
   border-radius: 7px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
   font-size: 0.76rem;
-  font-family: 'Consolas', 'SF Mono', monospace;
+  font-family: "Consolas", "SF Mono", monospace;
   outline: none;
   cursor: pointer;
   appearance: auto;
 }
-.pick-select:focus { border-color: rgba(167,139,250,0.6); }
-.knob.dirty .pick-select { border-color: rgba(167,139,250,0.4); }
+.pick-select:focus {
+  border-color: rgba(167, 139, 250, 0.6);
+}
+.knob.dirty .pick-select {
+  border-color: rgba(167, 139, 250, 0.4);
+}
 
 @media (max-width: 560px) {
-  .knob { grid-template-columns: 1fr 80px; }
-  .knob label { grid-column: 1 / -1; }
+  .knob {
+    grid-template-columns: 1fr 80px;
+  }
+  .knob label {
+    grid-column: 1 / -1;
+  }
 }
 </style>

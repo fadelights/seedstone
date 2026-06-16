@@ -1,53 +1,76 @@
 /* ── Reset & Base ──────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 /* Custom scrollbar — forces a layout scrollbar so backdrop-filter fixed elements
    don't overlap the scrollbar track via Chrome's compositing layer order. */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: oklch(0.28 0.05 280); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: oklch(0.38 0.07 280); }
-html { scrollbar-width: thin; scrollbar-color: oklch(0.28 0.05 280) var(--bg); }
-
-:root {
-  --bg:      #07070A;
-  --surface: rgba(255, 255, 255, 0.04);
-  --border:  rgba(255, 255, 255, 0.10);
-  --text:    #ECEAE3;
-  --text-2:  #C7C4D2;
-  --muted:   #9491A3;
-  --faint:   #67647a;
-  --accent:  oklch(0.72 0.15 295);
-  --violet:  oklch(0.72 0.15 295);
-  --indigo:  oklch(0.68 0.15 272);
-  --grad:    linear-gradient(120deg, oklch(0.74 0.15 285), oklch(0.7 0.15 262));
-  --panel:   #0F1018;
-  --panel-2: #15161F;
-  --panel-3: #1b1c27;
-  --line:    rgba(255,255,255,.07);
-  --line-2:  rgba(255,255,255,.12);
-  --radius:  18px;
-  --glow:    0 0 60px oklch(0.6 0.16 298 / .25);
-  --maxw:    1160px;
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.28 0.05 280);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.38 0.07 280);
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.28 0.05 280) var(--bg);
 }
 
-html, body {
+:root {
+  --bg: #07070a;
+  --surface: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #eceae3;
+  --text-2: #c7c4d2;
+  --muted: #9491a3;
+  --faint: #67647a;
+  --accent: oklch(0.72 0.15 295);
+  --violet: oklch(0.72 0.15 295);
+  --indigo: oklch(0.68 0.15 272);
+  --grad: linear-gradient(120deg, oklch(0.74 0.15 285), oklch(0.7 0.15 262));
+  --panel: #0f1018;
+  --panel-2: #15161f;
+  --panel-3: #1b1c27;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.12);
+  --radius: 18px;
+  --glow: 0 0 60px oklch(0.6 0.16 298 / 0.25);
+  --maxw: 1160px;
+}
+
+html,
+body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Geist', -apple-system, system-ui, sans-serif;
-  font-feature-settings: "ss01","cv01";
+  font-family:
+    "Geist",
+    -apple-system,
+    system-ui,
+    sans-serif;
+  font-feature-settings: "ss01", "cv01";
   overflow-x: hidden;
 }
 
 /* ── Nebula gradient behind everything ─────────────────────────────────────── */
 body::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(60% 50% at 72% 12%, oklch(0.7 0.15 290 / .13), transparent 70%),
-    radial-gradient(50% 40% at 12% 4%,  oklch(0.68 0.13 255 / .10), transparent 70%);
+    radial-gradient(60% 50% at 72% 12%, oklch(0.7 0.15 290 / 0.13), transparent 70%),
+    radial-gradient(50% 40% at 12% 4%, oklch(0.68 0.13 255 / 0.1), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -95,9 +118,14 @@ body::before {
 .reveal {
   opacity: 0;
   transform: translateY(28px);
-  transition: opacity 0.65s ease, transform 0.65s ease;
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease;
 }
-.reveal.revealed { opacity: 1; transform: none; }
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
+}
 
 /* ── Eyebrow label ─────────────────────────────────────────────────────────── */
 .eyebrow {
@@ -105,17 +133,18 @@ body::before {
   align-items: center;
   gap: 9px;
   font-size: 11px;
-  letter-spacing: .22em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #9491A3;
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  color: #9491a3;
+  font-family: "Geist Mono", ui-monospace, monospace;
   font-weight: 500;
 }
 .eyebrow::before {
-  content: '';
-  width: 6px; height: 6px;
+  content: "";
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--violet);
-  box-shadow: 0 0 10px 1px oklch(0.72 0.15 295 / .8);
+  box-shadow: 0 0 10px 1px oklch(0.72 0.15 295 / 0.8);
   flex-shrink: 0;
 }

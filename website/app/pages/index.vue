@@ -1,41 +1,45 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount } from "vue";
 
 useHead({
   link: [
-    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-    { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+    { rel: "preconnect", href: "https://fonts.googleapis.com" },
+    { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
     {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap',
+      rel: "stylesheet",
+      href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap",
     },
   ],
-})
+});
 
 useSeoMeta({
-  title:         'Seedstone — Every string is a unique gemstone',
-  description:   'Render a 3D rotating gemstone from any string. Deterministic, WebGL-powered, Three.js.',
-  ogTitle:       'Seedstone',
-  ogDescription: 'Every string is a unique gemstone',
-})
+  title: "Seedstone — Every string is a unique gemstone",
+  description:
+    "Render a 3D rotating gemstone from any string. Deterministic, WebGL-powered, Three.js.",
+  ogTitle: "Seedstone",
+  ogDescription: "Every string is a unique gemstone",
+});
 
-let revealObs: IntersectionObserver | null = null
+let revealObs: IntersectionObserver | null = null;
 
 onMounted(() => {
   revealObs = new IntersectionObserver(
-    (entries) => entries.forEach((e) => {
-      if (e.isIntersecting) { e.target.classList.add('revealed'); revealObs!.unobserve(e.target) }
-    }),
-    { threshold: 0.08, rootMargin: '0px 0px -48px 0px' },
-  )
-  document.querySelectorAll('.reveal').forEach((el) => revealObs!.observe(el))
-})
+    (entries) =>
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("revealed");
+          revealObs!.unobserve(e.target);
+        }
+      }),
+    { threshold: 0.08, rootMargin: "0px 0px -48px 0px" },
+  );
+  document.querySelectorAll(".reveal").forEach((el) => revealObs!.observe(el));
+});
 
-onBeforeUnmount(() => revealObs?.disconnect())
+onBeforeUnmount(() => revealObs?.disconnect());
 </script>
 
 <template>
-
   <SiteNav />
 
   <main class="page">

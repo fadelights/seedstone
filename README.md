@@ -7,10 +7,10 @@ Every trait — colour, cut, refraction, iridescence, imperfections — is deriv
 ## Quick start
 
 ```ts
-import { SeedstoneRenderer } from 'seedstone';
+import { SeedstoneRenderer } from "seedstone";
 
-new SeedstoneRenderer('alice', {
-  container: document.getElementById('gem')!,
+new SeedstoneRenderer("alice", {
+  container: document.getElementById("gem")!,
 });
 ```
 
@@ -23,18 +23,18 @@ deep-partial of the trait tree: a plain number/string pins a value for every see
 `seeded()` flips a value to seed-generated instead.
 
 ```ts
-import { SeedstoneRenderer, seeded, type SeedstoneConfigOverrides } from 'seedstone';
+import { SeedstoneRenderer, seeded, type SeedstoneConfigOverrides } from "seedstone";
 
 const config: SeedstoneConfigOverrides = {
   gem: {
-    cut: 'spinel',                  // pin every gem to the spinel cut
-    bodyLightness: seeded(),        // make the body lightness vary by seed
-    distortion: { perfection: 1 },  // pin to fully flawless
+    cut: "spinel", // pin every gem to the spinel cut
+    bodyLightness: seeded(), // make the body lightness vary by seed
+    distortion: { perfection: 1 }, // pin to fully flawless
   },
 };
 
-new SeedstoneRenderer('alice', {
-  container: document.getElementById('gem')!,
+new SeedstoneRenderer("alice", {
+  container: document.getElementById("gem")!,
   config,
 });
 ```
@@ -48,18 +48,18 @@ reconcile the existing instance in place, so they're cheap enough to call on eve
 Read back the fully-resolved values for the current seed from `gem.config` (a `SeedstoneConfig`).
 
 ```ts
-import { SeedstoneRenderer, type SeedstoneConfig } from 'seedstone';
+import { SeedstoneRenderer, type SeedstoneConfig } from "seedstone";
 
-const gem = new SeedstoneRenderer('alice', {
-  container: document.getElementById('gem')!,
+const gem = new SeedstoneRenderer("alice", {
+  container: document.getElementById("gem")!,
 });
 
-input.addEventListener('input', () => gem.update(input.value));  // new seed, same instance
+input.addEventListener("input", () => gem.update(input.value)); // new seed, same instance
 
-gem.setConfig({ gem: { cut: 'garnet', hue: 200 } });  // pin traits live
-gem.setConfig({});                                     // clear overrides
+gem.setConfig({ gem: { cut: "garnet", hue: 200 } }); // pin traits live
+gem.setConfig({}); // clear overrides
 
-const resolved: SeedstoneConfig = gem.config;  // every trait, resolved for this seed
+const resolved: SeedstoneConfig = gem.config; // every trait, resolved for this seed
 console.log(resolved.gem.hue, resolved.gem.speed);
 ```
 

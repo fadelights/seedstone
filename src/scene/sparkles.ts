@@ -1,7 +1,7 @@
-import * as THREE from 'three';
-import type { SeedstoneConfig } from '../config';
+import * as THREE from "three";
+import type { SeedstoneConfig } from "../config";
 
-type SparklesConfig = SeedstoneConfig['sparkles'];
+type SparklesConfig = SeedstoneConfig["sparkles"];
 
 /** mulberry32 — tiny deterministic PRNG, so the same seed gives the same sky. */
 function mulberry32(seed: number): () => number {
@@ -18,14 +18,14 @@ function mulberry32(seed: number): () => number {
 /** The point placement depends only on these — regenerate the buffer when they
  *  change, but skip it for a size/opacity tweak. */
 function positionSignature(s: SparklesConfig): string {
-  return [s.count, s.scatterSeed, s.radiusMin, s.radiusRange].join(',');
+  return [s.count, s.scatterSeed, s.radiusMin, s.radiusRange].join(",");
 }
 
 /** A shell of tiny points floating around the gem, placed from scatterSeed. */
 export class Sparkles {
-  private cfg:         SparklesConfig;
-  private points:      THREE.Points;
-  private material:    THREE.PointsMaterial;
+  private cfg: SparklesConfig;
+  private points: THREE.Points;
+  private material: THREE.PointsMaterial;
   private positionSig: string;
 
   constructor(scene: THREE.Scene, cfg: SeedstoneConfig) {
@@ -33,12 +33,15 @@ export class Sparkles {
     const sparkles = cfg.sparkles;
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', this._buildPositions(sparkles));
+    geometry.setAttribute("position", this._buildPositions(sparkles));
     this.positionSig = positionSignature(sparkles);
 
     this.material = new THREE.PointsMaterial({
-      color: 0xffffff, size: sparkles.size, transparent: true,
-      opacity: sparkles.baseOpacity, sizeAttenuation: true,
+      color: 0xffffff,
+      size: sparkles.size,
+      transparent: true,
+      opacity: sparkles.baseOpacity,
+      sizeAttenuation: true,
     });
     this.points = new THREE.Points(geometry, this.material);
     scene.add(this.points);
@@ -48,9 +51,9 @@ export class Sparkles {
     const positions = new THREE.BufferAttribute(new Float32Array(sparkles.count * 3), 3);
     const rand = mulberry32(Math.floor(sparkles.scatterSeed * 0xffffffff));
     for (let i = 0; i < sparkles.count; i++) {
-      const r     = sparkles.radiusMin + rand() * sparkles.radiusRange;
+      const r = sparkles.radiusMin + rand() * sparkles.radiusRange;
       const theta = rand() * Math.PI * 2;
-      const phi   = Math.acos(2 * rand() - 1);   // uniform on the sphere
+      const phi = Math.acos(2 * rand() - 1); // uniform on the sphere
       positions.setXYZ(
         i,
         r * Math.sin(phi) * Math.cos(theta),
@@ -65,7 +68,7 @@ export class Sparkles {
     const sparkles = cfg.sparkles;
     const sig = positionSignature(sparkles);
     if (sig !== this.positionSig) {
-      this.points.geometry.setAttribute('position', this._buildPositions(sparkles));
+      this.points.geometry.setAttribute("position", this._buildPositions(sparkles));
       this.positionSig = sig;
     }
     this.material.size = sparkles.size;
@@ -74,7 +77,8 @@ export class Sparkles {
 
   animate(t: number): void {
     this.points.rotation.y = t * this.cfg.driftRate;
-    this.material.opacity  = this.cfg.baseOpacity + Math.sin(t * this.cfg.pulseRate) * this.cfg.pulseAmount;
+    this.material.opacity =
+      this.cfg.baseOpacity + Math.sin(t * this.cfg.pulseRate) * this.cfg.pulseAmount;
   }
 
   dispose(): void {

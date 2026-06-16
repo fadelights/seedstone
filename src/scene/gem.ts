@@ -1,15 +1,15 @@
-import * as THREE from 'three';
-import { buildGeometry } from '../geometries/index';
-import { applyDistortions } from '../geometries/lib/distort';
-import type { SeedstoneConfig } from '../config';
+import * as THREE from "three";
+import { buildGeometry } from "../geometries/index";
+import { applyDistortions } from "../geometries/lib/distort";
+import type { SeedstoneConfig } from "../config";
 
-type GemConfig = SeedstoneConfig['gem'];
+type GemConfig = SeedstoneConfig["gem"];
 
 /** The geometry is fully determined by the cut plus the distortion seeds — so a
  *  rebuild is only needed when one of those changes (not on a colour/material tweak). */
 function geometrySignature(gem: GemConfig): string {
   const d = gem.distortion;
-  return [gem.cut, d.perfection, d.scaleX, d.scaleY, d.scaleZ, d.noiseSeed].join(',');
+  return [gem.cut, d.perfection, d.scaleX, d.scaleY, d.scaleZ, d.noiseSeed].join(",");
 }
 
 /**
@@ -20,35 +20,41 @@ function geometrySignature(gem: GemConfig): string {
  * only rebuilt when the cut or distortion changes.
  */
 export class Gem {
-  private cfg:         GemConfig;
-  private mesh:        THREE.Mesh;
-  private wireframe:   THREE.Mesh;     // child of mesh, shares its geometry
-  private material:    THREE.MeshPhysicalMaterial;
+  private cfg: GemConfig;
+  private mesh: THREE.Mesh;
+  private wireframe: THREE.Mesh; // child of mesh, shares its geometry
+  private material: THREE.MeshPhysicalMaterial;
   private geometrySig: string;
 
   constructor(scene: THREE.Scene, cfg: SeedstoneConfig) {
     this.cfg = cfg.gem;
     const gem = cfg.gem;
 
-    const geometry   = this._buildGeometry(gem);
+    const geometry = this._buildGeometry(gem);
     this.geometrySig = geometrySignature(gem);
 
     // Every key in gem.material is a MeshPhysicalMaterial property.
     this.material = new THREE.MeshPhysicalMaterial({
       ...gem.material,
-      metalness:   0.0,
-      roughness:   0.0,
+      metalness: 0.0,
+      roughness: 0.0,
       transparent: true,
-      side:        THREE.DoubleSide,
+      side: THREE.DoubleSide,
     });
     this._applyMaterial(gem);
 
     this.mesh = new THREE.Mesh(geometry, this.material);
     this.mesh.rotation.z = gem.tilt;
 
-    this.wireframe = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-      color: 0xffffff, wireframe: true, transparent: true, opacity: gem.wireframeOpacity,
-    }));
+    this.wireframe = new THREE.Mesh(
+      geometry,
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: true,
+        transparent: true,
+        opacity: gem.wireframeOpacity,
+      }),
+    );
     this.mesh.add(this.wireframe);
     scene.add(this.mesh);
   }
@@ -63,7 +69,11 @@ export class Gem {
    *  updates — no shader recompile). */
   private _applyMaterial(gem: GemConfig): void {
     Object.assign(this.material, gem.material);
-    this.material.color.setHSL(gem.hue / 360, gem.saturation * gem.bodySaturationScale, gem.bodyLightness);
+    this.material.color.setHSL(
+      gem.hue / 360,
+      gem.saturation * gem.bodySaturationScale,
+      gem.bodyLightness,
+    );
     this.material.attenuationColor.setHSL(gem.hue / 360, 1.0, gem.attenuationLightness);
   }
 
@@ -74,8 +84,8 @@ export class Gem {
     if (sig !== this.geometrySig) {
       const geometry = this._buildGeometry(gem);
       const old = this.mesh.geometry;
-      this.mesh.geometry      = geometry;
-      this.wireframe.geometry = geometry;   // shared with the mesh
+      this.mesh.geometry = geometry;
+      this.wireframe.geometry = geometry; // shared with the mesh
       old.dispose();
       this.geometrySig = sig;
     }
@@ -88,7 +98,8 @@ export class Gem {
 
   animate(t: number): void {
     this.mesh.rotation.y = t * this.cfg.speed * this.cfg.spinRate;
-    this.mesh.rotation.x = Math.sin(t * this.cfg.wobbleRate) * this.cfg.wobbleAmount + this.cfg.tilt;
+    this.mesh.rotation.x =
+      Math.sin(t * this.cfg.wobbleRate) * this.cfg.wobbleAmount + this.cfg.tilt;
   }
 
   dispose(): void {

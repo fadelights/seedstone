@@ -1,69 +1,84 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import type { SeedstoneConfig } from 'seedstone'
+import { ref, computed, watch } from "vue";
+import type { SeedstoneConfig } from "seedstone";
 
-const route  = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const inputValue      = ref(typeof route.query.seed === 'string' ? route.query.seed : '')
-const gemConfig       = ref<SeedstoneConfig | null>(null)
-const inputFocused    = ref(false)
-const caseInsensitive = ref(true)
-const copied          = ref(false)
+const inputValue = ref(typeof route.query.seed === "string" ? route.query.seed : "");
+const gemConfig = ref<SeedstoneConfig | null>(null);
+const inputFocused = ref(false);
+const caseInsensitive = ref(true);
+const copied = ref(false);
 
 function share() {
-  navigator.clipboard.writeText(window.location.href)
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+  navigator.clipboard.writeText(window.location.href);
+  copied.value = true;
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
 }
 
-const QUICK_PICKS = ['@satoshi', '0x71C7…976F', 'Orion-7', 'Stripe Inc', 'DOC-99812']
+const QUICK_PICKS = ["@satoshi", "0x71C7…976F", "Orion-7", "Stripe Inc", "DOC-99812"];
 
 const activeSeed = computed(() => {
-  const raw = inputValue.value.trim() || 'doadkjwfo'
-  return caseInsensitive.value ? raw.toLowerCase() : raw
-})
+  const raw = inputValue.value.trim() || "doadkjwfo";
+  return caseInsensitive.value ? raw.toLowerCase() : raw;
+});
 
 watch(inputValue, (val) => {
-  router.replace({ query: val.trim() ? { seed: val.trim() } : {} })
-})
+  router.replace({ query: val.trim() ? { seed: val.trim() } : {} });
+});
 
 function onInput() {}
-function onQuickPick(val: string) { inputValue.value = val }
+function onQuickPick(val: string) {
+  inputValue.value = val;
+}
 
 defineExpose({
   focusInput() {
-    document.getElementById('forge-input')?.focus()
-    document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })
+    document.getElementById("forge-input")?.focus();
+    document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" });
   },
-})
+});
 </script>
 
 <template>
   <header id="hero" class="hero">
     <div class="wrap">
       <div class="hero-grid">
-
         <!-- Left: copy + forge field -->
         <div class="hero-copy">
           <span class="eyebrow">Deterministic visual identity</span>
 
           <h1 class="h1">
-            Give any string<br>
+            Give any string<br />
             its own <em>gemstone</em>.
           </h1>
 
           <p class="lede">
             Type a username, wallet, company, or AI agent — Seedstone forges a unique 3D gem as its
-            <strong>permanent visual identity</strong>. The same input always crystallizes the exact same stone.
+            <strong>permanent visual identity</strong>. The same input always crystallizes the exact
+            same stone.
           </p>
 
           <div class="forge">
             <div class="field" :class="{ focused: inputFocused }">
-              <svg class="field-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="4" y1="7" x2="20" y2="7"/>
-                <line x1="4" y1="12" x2="20" y2="12"/>
-                <line x1="4" y1="17" x2="11" y2="17"/>
+              <svg
+                class="field-icon"
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="17" x2="11" y2="17" />
               </svg>
               <input
                 id="forge-input"
@@ -80,10 +95,16 @@ defineExpose({
               <button
                 class="case-toggle"
                 :class="{ active: caseInsensitive }"
-                :title="caseInsensitive ? 'Case-insensitive (click to make case-sensitive)' : 'Case-sensitive (click to make case-insensitive)'"
+                :title="
+                  caseInsensitive
+                    ? 'Case-insensitive (click to make case-sensitive)'
+                    : 'Case-sensitive (click to make case-insensitive)'
+                "
                 @click="caseInsensitive = !caseInsensitive"
                 @mousedown.prevent
-              >Aa</button>
+              >
+                Aa
+              </button>
               <button
                 class="share-btn"
                 :class="{ copied }"
@@ -91,24 +112,46 @@ defineExpose({
                 @click="share"
                 @mousedown.prevent
               >
-                <svg v-if="!copied" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                <svg
+                  v-if="!copied"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                 </svg>
-                <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  v-else
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
             </div>
 
             <div class="examples">
               <span class="ex-lbl">Try</span>
-              <button
-                v-for="val in QUICK_PICKS"
-                :key="val"
-                class="chip"
-                @click="onQuickPick(val)"
-              >{{ val }}</button>
+              <button v-for="val in QUICK_PICKS" :key="val" class="chip" @click="onQuickPick(val)">
+                {{ val }}
+              </button>
             </div>
           </div>
         </div>
@@ -122,7 +165,6 @@ defineExpose({
           </div>
           <GemGenome :config="gemConfig" :seed="activeSeed" />
         </div>
-
       </div>
     </div>
   </header>
@@ -146,7 +188,10 @@ defineExpose({
   align-items: center;
 }
 @media (min-width: 960px) {
-  .hero-grid { grid-template-columns: 1.05fr 1.1fr; gap: 60px; }
+  .hero-grid {
+    grid-template-columns: 1.05fr 1.1fr;
+    gap: 60px;
+  }
 }
 
 .hero-copy {
@@ -164,7 +209,7 @@ defineExpose({
   color: var(--text);
 }
 .h1 em {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: "Instrument Serif", Georgia, serif;
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -181,9 +226,14 @@ defineExpose({
   margin: 26px 0 0;
   max-width: 28em;
 }
-.lede strong { color: var(--text); font-weight: 500; }
+.lede strong {
+  color: var(--text);
+  font-weight: 500;
+}
 
-.forge { margin-top: 38px; }
+.forge {
+  margin-top: 38px;
+}
 
 .field {
   display: flex;
@@ -193,13 +243,18 @@ defineExpose({
   border: 1px solid var(--line-2);
   border-radius: 13px;
   padding: 6px 14px;
-  transition: border-color .25s, box-shadow .25s;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
 }
 .field.focused {
-  border-color: oklch(0.7 0.15 290 / .55);
-  box-shadow: 0 0 0 4px oklch(0.7 0.15 290 / .09);
+  border-color: oklch(0.7 0.15 290 / 0.55);
+  box-shadow: 0 0 0 4px oklch(0.7 0.15 290 / 0.09);
 }
-.field-icon { flex-shrink: 0; color: #67647a; }
+.field-icon {
+  flex-shrink: 0;
+  color: #67647a;
+}
 
 .field input {
   flex: 1;
@@ -207,17 +262,19 @@ defineExpose({
   border: none;
   outline: none;
   color: var(--text);
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 14.5px;
   letter-spacing: -0.01em;
   min-width: 0;
   padding: 4px 0;
 }
-.field input::placeholder { color: #67647a; }
+.field input::placeholder {
+  color: #67647a;
+}
 
 .case-toggle {
   flex-shrink: 0;
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -227,13 +284,16 @@ defineExpose({
   background: transparent;
   color: #67647a;
   cursor: pointer;
-  transition: color .18s, border-color .18s, background .18s;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background 0.18s;
   user-select: none;
 }
 .case-toggle.active {
   color: oklch(0.75 0.14 290);
-  border-color: oklch(0.7 0.15 290 / .45);
-  background: oklch(0.7 0.15 290 / .08);
+  border-color: oklch(0.7 0.15 290 / 0.45);
+  background: oklch(0.7 0.15 290 / 0.08);
 }
 .case-toggle:hover {
   border-color: var(--line-2);
@@ -241,7 +301,7 @@ defineExpose({
 }
 .case-toggle.active:hover {
   color: oklch(0.82 0.14 290);
-  border-color: oklch(0.7 0.15 290 / .65);
+  border-color: oklch(0.7 0.15 290 / 0.65);
 }
 
 .share-btn {
@@ -256,7 +316,10 @@ defineExpose({
   background: transparent;
   color: #67647a;
   cursor: pointer;
-  transition: color .18s, border-color .18s, background .18s;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background 0.18s;
 }
 .share-btn:hover {
   border-color: var(--line-2);
@@ -264,8 +327,8 @@ defineExpose({
 }
 .share-btn.copied {
   color: oklch(0.75 0.14 150);
-  border-color: oklch(0.7 0.15 150 / .45);
-  background: oklch(0.7 0.15 150 / .08);
+  border-color: oklch(0.7 0.15 150 / 0.45);
+  background: oklch(0.7 0.15 150 / 0.08);
 }
 
 .examples {
@@ -281,15 +344,15 @@ defineExpose({
   margin-right: 2px;
 }
 .chip {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 12px;
   color: var(--text-2);
   cursor: pointer;
   padding: 5px 11px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: oklch(0.10 0.01 280 / .5);
-  transition: all .18s;
+  background: oklch(0.1 0.01 280 / 0.5);
+  transition: all 0.18s;
 }
 .chip:hover {
   border-color: var(--line-2);
@@ -303,7 +366,11 @@ defineExpose({
   align-items: center;
   gap: 28px;
 }
-@media (max-width: 640px) { .hero-right { flex-direction: column; } }
+@media (max-width: 640px) {
+  .hero-right {
+    flex-direction: column;
+  }
+}
 
 .stage {
   flex: 1;
@@ -315,10 +382,15 @@ defineExpose({
   justify-content: center;
 }
 .stage::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 46%, oklch(0.6 0.16 290 / .38), oklch(0.5 0.14 265 / .12) 46%, transparent 70%);
+  background: radial-gradient(
+    circle at 50% 46%,
+    oklch(0.6 0.16 290 / 0.38),
+    oklch(0.5 0.14 265 / 0.12) 46%,
+    transparent 70%
+  );
   filter: blur(8px);
   z-index: 0;
   pointer-events: none;
@@ -329,7 +401,9 @@ defineExpose({
   position: relative;
   z-index: 1;
 }
-.stage :deep(.gem-wrap::before) { display: none; }
+.stage :deep(.gem-wrap::before) {
+  display: none;
+}
 .stage :deep(.gem-container) {
   border-radius: 0;
   overflow: visible;

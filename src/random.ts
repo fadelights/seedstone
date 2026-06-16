@@ -27,5 +27,5 @@ function scramble(seed: number): number {
  * An empty seed falls back to 'seedstone'.
  */
 export function sampleUnit(seed: string, label: string): number {
-  return scramble(djb2(`${label}:${seed.length === 0 ? 'seedstone' : seed}`));
+  return scramble(djb2(`${label}:${seed.length === 0 ? "seedstone" : seed}`));
 }

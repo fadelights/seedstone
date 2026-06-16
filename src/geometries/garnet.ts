@@ -1,9 +1,9 @@
-import { buildRegularPolyhedron } from './lib/platonic';
-import type { GemCutModule } from './index';
+import { buildRegularPolyhedron } from "./lib/platonic";
+import type { GemCutModule } from "./index";
 
 // Garnet naturally grows dodecahedral crystals — 12 pentagonal faces.
 const mod: GemCutModule = {
-  name: 'garnet',
+  name: "garnet",
   build: () => buildRegularPolyhedron(12),
 };
 export default mod;
